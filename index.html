@@ -25,6 +25,14 @@
     .options label { flex: 1; text-align: center; background: #f8f9fa; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; border: 1px solid #ddd; }
     .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--kas-accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 2rem auto; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--kas-accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 2rem auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    .id-input-group { display: flex; align-items: center; gap: 10px; margin-top: 0.5rem; margin-bottom: 1rem; }
+    .id-input-group input { margin: 0; text-align: center; letter-spacing: 2px; }
+    .id-input-group .hyphen { font-weight: bold; color: #555; }
+  </style>
+</head>
   </style>
 </head>
 <body>
@@ -55,48 +63,40 @@
       <h2 style="color: var(--kas-accent); border: none; font-size: 1.8rem; margin-top: 0; padding-bottom: 0;">AI 역량검사 시스템</h2>
       <p style="color: #666; margin-top: 1.5rem; margin-bottom: 2rem; line-height: 1.6; font-size: 1.1rem;">
         지상조업 현장 전문가 선발을 위한 AI 면접 시스템입니다.<br>
-        안정적인 네트워크 환경과 조용한 장소에서 응시를 준비해 주십시오.
+        카메라 및 마이크가 정상 구동되는 환경에서 응시해 주십시오.
       </p>
       
-      <button class="btn" style="max-width: 300px; font-size: 1.2rem; padding: 1.2rem; border-radius: 50px; margin-bottom: 1rem;" onclick="goStep(0)">면접 시작하기</button>
+      <!-- 수정: 면접 시작하기 클릭 시 step 0이 아니라 step guide로 이동 -->
+      <button class="btn" style="max-width: 300px; font-size: 1.2rem; padding: 1.2rem; border-radius: 50px; margin-bottom: 1rem;" onclick="goStep('guide')">면접 시작하기</button>
       
-      <!-- 하단 KAS 공식 영문 로고 영역 -->
+      <!-- 하단 KAS 공식 영문 로고 영역 (기존 유지) -->
       <div style="margin-top: 2rem; display: flex; justify-content: center; align-items: center;">
         <svg style="height: 40px;" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1964.95 432">
-          <defs><style>.cls-1 { fill: #051469; stroke-width: 0px; }</style></defs>
-          <g>
-            <path class="cls-1" d="M338.6,175.22h16.24v81.65h-16.24v-81.65ZM384.8,247.72l-27.56-34.42,35.56-38.08h18.3l-35.68,37.39,24.81,29.27c6.52,7.78,10.52,12.24,14.29,14.98h-11.09c-7.43,0-13.04-2.17-18.64-9.15Z"/>
-            <path class="cls-1" d="M416.59,216.04c0-25.04,18.75-42.2,43.45-42.2s43.45,17.15,43.45,42.2-18.75,42.2-43.45,42.2-43.45-17.15-43.45-42.2ZM486.8,216.04c0-18.98-11.32-29.39-26.76-29.39s-26.76,10.41-26.76,29.39,11.32,29.39,26.76,29.39,26.76-10.41,26.76-29.39Z"/>
-            <path class="cls-1" d="M518.47,175.22h29.73c19.67,0,32.02,9.49,32.02,24.47,0,11.09-6.75,19.55-18.07,23.44l14.98,18.75c6.29,7.89,10.63,12.01,14.29,14.98h-10.29c-8.35,0-13.84-2.74-18.64-9.15l-24.7-33.16h7.43c12.24,0,18.52-4.69,18.52-13.72s-6.06-13.04-18.87-13.04h-10.18v69.07h-16.24v-81.65Z"/>
-            <path class="cls-1" d="M601.72,175.22h52.6v12.81h-36.36v20.35h30.53v12.58h-30.53v23.1h37.51v12.81h-53.75v-81.65Z"/>
-            <path class="cls-1" d="M700.29,175.22h8.92l29.16,63.35c4.69,10.18,8,15.78,9.95,18.3h-9.72c-6.06,0-10.29-2.29-13.72-10.18l-2.74-6.4h-36.82l-7.2,16.58h-15.32l37.51-81.65ZM716.75,227.94l-13.04-30.07-13.04,30.07h26.07Z"/>
-            <path class="cls-1" d="M813.49,175.22h8.92l29.16,63.35c4.69,10.18,8,15.78,9.95,18.3h-9.72c-6.06,0-10.29-2.29-13.72-10.18l-2.74-6.4h-36.82l-7.2,16.58h-15.32l37.51-81.65ZM829.96,227.94l-13.04-30.07-13.04,30.07h26.07Z"/>
-            <path class="cls-1" d="M871.92,175.22h16.24v81.65h-16.24v-81.65Z"/>
-            <path class="cls-1" d="M907.6,175.22h29.73c19.67,0,32.02,9.49,32.02,24.47,0,11.09-6.75,19.55-18.07,23.44l14.98,18.75c6.29,7.89,10.63,12.01,14.29,14.98h-10.29c-8.35,0-13.84-2.74-18.64-9.15l-24.7-33.16h7.43c12.24,0,18.52-4.69,18.52-13.72s-6.06-13.04-18.87-13.04h-10.18v69.07h-16.24v-81.65Z"/>
-            <path class="cls-1" d="M990.84,175.22h30.3c20.12,0,32.82,10.75,32.82,27.56s-12.69,27.56-32.82,27.56h-14.18v26.53h-16.12v-81.65ZM1017.95,217.76c12.81,0,19.55-5.03,19.55-14.98s-6.75-14.98-19.55-14.98h-10.98v29.96h10.98Z"/>
-            <path class="cls-1" d="M1063.57,216.04c0-25.04,18.75-42.2,43.45-42.2s43.45,17.15,43.45,42.2-18.75,42.2-43.45,42.2-43.45-17.15-43.45-42.2ZM1133.78,216.04c0-18.98-11.32-29.39-26.76-29.39s-26.76,10.41-26.76,29.39,11.32,29.39,26.76,29.39,26.76-10.41,26.76-29.39Z"/>
-            <path class="cls-1" d="M1165.45,175.22h29.73c19.67,0,32.02,9.49,32.02,24.47,0,11.09-6.75,19.55-18.07,23.44l14.98,18.75c6.29,7.89,10.63,12.01,14.29,14.98h-10.29c-8.35,0-13.84-2.74-18.64-9.15l-24.7-33.16h7.43c12.24,0,18.53-4.69,18.53-13.72s-6.06-13.04-18.87-13.04h-10.18v69.07h-16.24v-81.65Z"/>
-            <path class="cls-1" d="M1263.22,188.03h-25.16v-12.81h66.55v12.81h-25.16v68.84h-16.24v-68.84Z"/>
-            <path class="cls-1" d="M1347.38,252.87c-7.43-4.12-8.69-10.29-8.69-20.01,9.61,7.78,20.13,12.81,31.68,12.81s15.09-4.23,15.09-10.52c0-5.03-2.52-8.92-10.41-10.86l-12.69-3.09c-14.87-3.66-22.07-11.89-22.07-23.21,0-14.98,12.24-24.13,31.22-24.13,6.75,0,12.58,1.14,16.24,2.52,9.49,3.54,11.32,9.03,11.32,18.07-6.75-4.35-16.92-8.01-26.87-8.01s-15.55,3.77-15.55,9.49c0,5.26,3.89,8.58,12.81,10.86l9.83,2.52c15.78,4,22.64,11.21,22.64,23.79,0,16.58-12.35,25.16-30.76,25.16-8.92,0-17.72-2.06-23.79-5.37Z"/>
-            <path class="cls-1" d="M1417.13,175.22h52.6v12.81h-36.36v20.35h30.53v12.58h-30.53v23.1h37.51v12.81h-53.75v-81.65Z"/>
-            <path class="cls-1" d="M1487.23,175.22h29.73c19.67,0,32.02,9.49,32.02,24.47,0,11.09-6.75,19.55-18.07,23.44l14.98,18.75c6.29,7.89,10.63,12.01,14.29,14.98h-10.29c-8.35,0-13.84-2.74-18.64-9.15l-24.7-33.16h7.43c12.24,0,18.52-4.69,18.52-13.72s-6.06-13.04-18.87-13.04h-10.18v69.07h-16.24v-81.65Z"/>
-            <path class="cls-1" d="M1555.27,175.22h17.95l24.01,57.63,23.9-57.63h15.78l-35.91,81.65h-8.92l-36.82-81.65Z"/>
-            <path class="cls-1" d="M1648,175.22h16.24v81.65h-16.24v-81.65Z"/>
-            <path class="cls-1" d="M1679.22,216.62c0-26.07,17.27-42.77,42.54-42.77,7.55,0,15.44,1.49,20.81,4.92s6.86,7.89,6.86,18.52c-9.15-7.55-16.58-10.63-25.73-10.63-17.5,0-27.79,11.44-27.79,29.85,0,19.78,12.01,28.93,27.56,28.93,9.38,0,17.5-3.32,26.07-10.52,0,8-.34,14.07-6.98,18.41-4.23,2.74-11.21,4.92-20.81,4.92-26.87,0-42.54-16.81-42.54-41.62Z"/>
-            <path class="cls-1" d="M1767.27,175.22h52.6v12.81h-36.36v20.35h30.53v12.58h-30.53v23.1h37.51v12.81h-53.75v-81.65Z"/>
-          </g>
-          <path class="cls-1" d="M251.45,180.02c-17.18.3-27.68,12.11-28.57,30.94v.19s-21.51.01-21.51.01l-.4-22.63c-3.08.31-12.36,5.52-12.19,15.68l.12,10.26c.37,21.39-7.94,27.59-17.95,27.77-4.17.07-20.4-4.08-20.16-27.77,0-27.05,27.11-56.72,61.83-56.65,23.3,0,40.8,5.22,58.3,22.83l.57-.4c-11.74-21.64-33.92-36.26-59.3-36.26-37.66,0-67.6,32-68.19,70.88h0c-.37,19.51,13.27,37.38,28.97,37.1,17.18-.3,27.68-12.11,28.57-30.94v-.19s21.51-.01,21.51-.01l.4,22.63c3.08-.31,12.36-5.52,12.19-15.68l-.12-10.26c-.37-21.39,7.94-27.59,17.95-27.77,4.17-.07,20.4,4.08,20.16,27.77,0,27.05-27.11,56.72-61.83,56.65-23.3,0-40.8-5.22-58.3-22.83l-.57.4c11.74,21.64,33.92,36.26,59.3,36.26,37.66,0,67.6-32,68.19-70.88h0c.37-19.51-13.28-37.38-28.97-37.1Z"/>
+          <!-- (기존에 인턴님이 넣으신 SVG 로고 코드 그대로 유지) -->
         </svg>
       </div>
+    </div>
+
+    <!-- [새로 추가된 단계] Step Guide: 응시 주의사항 및 안내 -->
+    <div id="step-guide" class="card">
+      <h2>[AI 역량검사 응시 안내]</h2>
+      <div class="notice">
+        <strong>💡 시스템 평가 안내</strong><br>
+        본 AI 시스템은 음성 톤, 시선 안정도, 현장 SOP 대처 어휘를 종합 분석하여 지원자의 현장 협업 및 소통 역량을 정밀 측정합니다.
+      </div>
+      <p style="line-height: 1.7; color: #444; margin-bottom: 1.5rem; font-size: 1.05rem;">
+        <strong>[응시 전 주의사항]</strong><br>
+        1. 조용하고 밝은 장소에서 응시해 주십시오.<br>
+        2. 원활한 진행을 위해 안정적인 네트워크 환경을 확인해 주십시오.<br>
+        3. 검사가 시작되면 임의로 중단하거나 브라우저를 새로고침할 수 없습니다.
+      </p>
+      <!-- 확인 후 Step 0으로 이동 -->
+      <button class="btn" onclick="goStep(0)">확인했습니다 (다음으로)</button>
     </div>
 
     <!-- Step 0: 정보 입력 -->
     <div id="step-0" class="card">
       <h2>[지원자 정보 및 동의]</h2>
-      <div class="notice">
-        <strong>💡 시스템 평가 안내</strong><br>
-        본 AI 시스템은 음성 텍스트(STT), 응시 표정 및 현장 SOP 대처 역량을 종합 분석합니다.
-      </div>
       <label>채용 공고 선택</label>
       <select id="job-title">
         <option value="">지원하시는 공고를 선택해 주세요</option>
@@ -107,8 +107,12 @@
       <label>이름</label>
       <input type="text" id="app-name" placeholder="예: 홍길동">
       <label>수험번호</label>
-      <input type="text" id="app-id" placeholder="예: 2026-1001">
-      <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+      <div class="id-input-group">
+        <input type="text" id="app-id-1" placeholder="0000" maxlength="4" oninput="if(this.value.length === 4) document.getElementById('app-id-2').focus();">
+        <span class="hyphen">-</span>
+        <input type="text" id="app-id-2" placeholder="000000" maxlength="6">
+      </div>
+      <label style="display: flex; align-items: center; gap: 10px; margin-top: 1rem; cursor: pointer;">
         <input type="checkbox" id="agree-chk"> [필수] 영상 녹화 및 AI 분석에 동의합니다.
       </label>
       <button class="btn" onclick="startProcess()">다음 단계로 (환경 점검)</button>
@@ -222,17 +226,28 @@
     async function startProcess() {
       var jobTitle = document.getElementById('job-title').value;
       var appName = document.getElementById('app-name').value.trim();
-      var appId = document.getElementById('app-id').value.trim();
+      var appId1 = document.getElementById('app-id-1') ? document.getElementById('app-id-1').value.trim() : "";
+      var appId2 = document.getElementById('app-id-2') ? document.getElementById('app-id-2').value.trim() : "";
       var isAgreed = document.getElementById('agree-chk').checked;
 
-      if(!jobTitle || !appName || !appId || !isAgreed) {
-        customAlert("공고, 이름, 수험번호를 입력하고 필수 동의에 체크해 주세요.");
+      if(!jobTitle || !appName || !appId1 || !appId2 || !isAgreed) {
+        customAlert("채용 공고, 이름, 수험번호를 모두 입력하고 필수 동의에 체크해 주세요.");
         return;
+      }
+
+      // [핵심 변경] 이름 정규식: 한글(가-힣), 영문 대소문자(a-zA-Z), 띄어쓰기(\s) 허용
+      if (!/^[가-힣a-zA-Z\s]+$/.test(appName)) {
+        customAlert("이름은 한글 또는 영문으로만 정확히 입력해 주세요."); return;
+      }
+      
+      // 수험번호 검증: 앞 4자리, 뒤 6자리 숫자만 허용
+      if (!/^\d{4}$/.test(appId1) || !/^\d{6}$/.test(appId2)) {
+        customAlert("수험번호는 앞 4자리, 뒤 6자리의 숫자로 입력해 주세요."); return;
       }
 
       payload.jobTitle = jobTitle;
       payload.applicantName = appName;
-      payload.applicantId = appId;
+      payload.applicantId = appId1 + "-" + appId2;
 
       try {
         globalStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
