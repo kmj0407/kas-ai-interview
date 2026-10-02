@@ -156,7 +156,7 @@
     var recognition = null;
     var timer = null;
     var isRec = false;
-    var dilemmaIndex = 0;
+    var dilemmaindex = 0;
 
     var payload = {
       action: "submit",
@@ -262,7 +262,7 @@
 
       recognition.onresult = function(event) {
         var text = '';
-        for(var i = event.resultIndex; i < event.results.length; i++) {
+        for(var i = event.resultindex; i < event.results.length; i++) {
           text += event.results[i][0].transcript;
         }
         document.getElementById(boxId).innerText = "🎙️ " + text;
@@ -271,7 +271,7 @@
           passStep1();
         }
         if(stepNum === 2) payload.selfIntroText = text;
-        if(stepNum === 4) payload.dilemmaAnswers += "[Q" + (dilemmaIndex+1) + "] " + text + " ";
+        if(stepNum === 4) payload.dilemmaAnswers += "[Q" + (dilemmaindex+1) + "] " + text + " ";
         if(stepNum === 5) payload.followupAnswer = text;
       };
 
@@ -309,8 +309,8 @@
 
       if(step === 2) goStep(3);
       if(step === 4) {
-        dilemmaIndex++;
-        if(dilemmaIndex < 3) loadDilemma();
+        dilemmaindex++;
+        if(dilemmaindex < 3) loadDilemma();
         else goStep(5);
       }
       if(step === 5) goStep(6);
@@ -345,8 +345,8 @@
     function submitSurvey() { goStep(4); }
 
     function loadDilemma() {
-      document.getElementById('q4-num').innerText = "질문 " + (dilemmaIndex+1) + "/3";
-      document.getElementById('q4-text').innerText = dilemmaQs[dilemmaIndex];
+      document.getElementById('q4-num').innerText = "질문 " + (dilemmaindex+1) + "/3";
+      document.getElementById('q4-text').innerText = dilemmaQs[dilemmaindex];
       document.getElementById('stt-step4').innerText = "답변 내용이 실시간 기록됩니다.";
     }
 
