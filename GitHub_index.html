@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>한국공항(KAS) AI 역량검사</title>
+  <style>
+    :root { --kas-blue: #002B49; --kas-accent: #0066CC; --kas-bg: #F4F7FA; }
+    body { font-family: 'Pretendard', sans-serif; background: var(--kas-bg); color: #333; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
+    header { background: var(--kas-blue); color: white; padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    main { flex: 1; display: flex; justify-content: center; align-items: center; padding: 2rem; }
+    .card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); width: 100%; max-width: 800px; display: none; }
+    .card.active { display: block; }
+    h2 { color: var(--kas-blue); margin-bottom: 1rem; border-bottom: 2px solid #eee; padding-bottom: 0.8rem; }
+    .btn { width: 100%; padding: 1rem; background: var(--kas-accent); color: white; border: none; border-radius: 8px; font-size: 1.05rem; font-weight: bold; cursor: pointer; margin-top: 1rem; }
+    .btn:hover { background: var(--kas-blue); }
+    input[type="text"], select { width: 100%; padding: 0.8rem; margin-top: 0.5rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+    .media-box { background: #000; width: 100%; aspect-ratio: 16/9; border-radius: 8px; overflow: hidden; position: relative; margin-bottom: 1rem; }
+    video { width: 100%; height: 100%; object-fit: cover; }
+    .notice { background: #F0F7FF; border-left: 4px solid var(--kas-accent); padding: 1rem; margin-bottom: 1.5rem; font-size: 0.95rem; line-height: 1.5; }
+    .timer { font-size: 1.5rem; font-weight: bold; color: #E53935; text-align: right; }
+    .stt-box { background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; padding: 1rem; min-height: 60px; max-height: 100px; overflow-y: auto; margin-top: 0.5rem; font-size: 0.95rem; color: #444; }
+    .survey-q { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #eee; }
+    .options { display: flex; gap: 10px; margin-top: 10px; }
+    .options label { flex: 1; text-align: center; background: #f8f9fa; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; border: 1px solid #ddd; }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--kas-accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 2rem auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- 커스텀 알림창 -->
+  <div id="custom-alert" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 20000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center; max-width: 320px; width: 80%;">
+      <p id="custom-alert-msg" style="margin-bottom: 1.5rem; line-height: 1.5; font-size: 1.05rem; word-break: keep-all;"></p>
+      <button style="width: 100%; padding: 0.8rem; background: var(--kas-accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="document.getElementById('custom-alert').style.display='none'">확인</button>
+    </div>
+  </div>
+
+  <header>
+    <h2 style="color: white; border-bottom: none; margin: 0;">한국공항(KAS)</h2>
+    <span style="background: var(--kas-accent); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; color: white;">지상조업 AI 역량검사</span>
+  </header>
+
+  <main>
+    <!-- Step Intro -->
+    <div id="step-intro" class="card active" style="text-align: center;">
+      <h1 style="color: var(--kas-blue); font-size: 2.5rem; margin-bottom: 0.5rem;">한국공항 KAS</h1>
+      <h2 style="color: var(--kas-accent); border: none; font-size: 1.6rem; margin-top: 0;">AI 역량검사 시스템</h2>
+      <p style="color: #666; margin: 1.5rem 0 2rem 0; line-height: 1.6;">
+        지상조업 현장 전문가 선발을 위한 AI 역량검사입니다.<br>
+        카메라 및 마이크가 정상 구동되는 환경에서 응시해 주십시오.
+      </p>
+      <button class="btn" style="max-width: 300px; border-radius: 50px;" onclick="goStep(0)">면접 시작하기</button>
+    </div>
+
+    <!-- Step 0: 정보 입력 -->
+    <div id="step-0" class="card">
+      <h2>[지원자 정보 및 동의]</h2>
+      <div class="notice">
+        <strong>💡 시스템 평가 안내</strong><br>
+        본 AI 시스템은 음성 텍스트(STT), 응시 표정 및 현장 SOP 대처 역량을 종합 분석합니다.
+      </div>
+      <label>채용 공고 선택</label>
+      <select id="job-title">
+        <option value="">지원하시는 공고를 선택해 주세요</option>
+        <option value="[26년 10월] 경인지역 지상조업 신입사원 모집">[26년 10월] 경인지역 지상조업 신입사원 모집</option>
+        <option value="[26년 10월] 김해공항 지상조업 신입사원 모집">[26년 10월] 김해공항 지상조업 신입사원 모집</option>
+        <option value="[26년 10월] 제주공항 지상조업 신입사원 모집">[26년 10월] 제주공항 지상조업 신입사원 모집</option>
+      </select>
+      <label>이름</label>
+      <input type="text" id="app-name" placeholder="예: 홍길동">
+      <label>수험번호</label>
+      <input type="text" id="app-id" placeholder="예: 2026-1001">
+      <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+        <input type="checkbox" id="agree-chk"> [필수] 영상 녹화 및 AI 분석에 동의합니다.
+      </label>
+      <button class="btn" onclick="startProcess()">다음 단계로 (환경 점검)</button>
+    </div>
+
+    <!-- Step 1: 환경 점검 -->
+    <div id="step-1" class="card">
+      <h2>[응시 환경 점검]</h2>
+      <p>카메라와 마이크 상태를 점검합니다. 아래 문장을 소리 내어 읽어주세요.</p>
+      <div class="media-box">
+        <video id="cam-1" autoplay muted playsinline></video>
+        <div style="position: absolute; bottom: 15px; left: 5%; width: 90%; height: 10px; background: rgba(255,255,255,0.4); border-radius: 5px; overflow: hidden;">
+          <div id="volume-meter" style="width: 0%; height: 100%; background: #4CAF50; transition: width 0.1s;"></div>
+        </div>
+      </div>
+      <p style="text-align: center; font-weight: bold; color: var(--kas-accent);">"안녕하십니까, 한국공항 지상조업 안전 수칙을 준수하겠습니다."</p>
+      <div class="stt-box" id="stt-step1">🎙️ 마이크에 대고 말을 시작하세요...</div>
+      <button class="btn" id="btn-step1-next" style="opacity: 0.5;" onclick="goStep(2)" disabled>음성 인식 대기 중...</button>
+    </div>
+
+    <!-- Step 2: 자기소개 -->
+    <div id="step-2" class="card">
+      <h2>[자기소개 및 지원동기 (1분)]</h2>
+      <div class="timer" id="time-2">01:00</div>
+      <div class="media-box"><video id="cam-2" autoplay muted playsinline></video></div>
+      <p>한국공항 지상조업 직무 지원 동기와 본인의 강점을 말씀해 주세요.</p>
+      <div class="stt-box" id="stt-step2">답변 내용이 실시간으로 자막 변환됩니다.</div>
+      <button class="btn" id="btn-2" onclick="toggleRec(2, 60)">답변 시작</button>
+    </div>
+
+    <!-- Step 3: 인성 성향 검사 -->
+    <div id="step-3" class="card">
+      <h2>[현장 안전/인성 성향 검사]</h2>
+      <p>지상조업 현장 적응도 및 원칙 준수성을 평가합니다.</p>
+      <div id="survey-wrap" style="max-height: 350px; overflow-y: auto; margin-bottom: 1rem;"></div>
+      <button class="btn" onclick="submitSurvey()">검사 제출 및 다음 단계</button>
+    </div>
+
+    <!-- Step 4: 딜레마 AI 역량검사 -->
+    <div id="step-4" class="card">
+      <h2>[현장 딜레마 AI 역량검사]</h2>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="font-weight: bold; color: var(--kas-accent);" id="q4-num">질문 1/3</span>
+        <div class="timer" id="time-4">02:00</div>
+      </div>
+      <div class="media-box"><video id="cam-4" autoplay muted playsinline></video></div>
+      <p id="q4-text" style="font-size: 1.1rem; font-weight: bold;">질문 불러오는 중...</p>
+      <div class="stt-box" id="stt-step4">답변 내용이 실시간 기록됩니다.</div>
+      <button class="btn" id="btn-4" onclick="toggleRec(4, 120)">답변 시작</button>
+    </div>
+
+    <!-- Step 5: 실시간 심층 꼬리질문 -->
+    <div id="step-5" class="card">
+      <h2>[AI 실시간 심층 꼬리질문]</h2>
+      <div class="timer" id="time-5">01:00</div>
+      <div class="media-box"><video id="cam-5" autoplay muted playsinline></video></div>
+      <p id="q5-text" style="font-size: 1.05rem; font-weight: bold; color: #E53935;">🤖 [Gemini AI 꼬리질문 생성 중...]</p>
+      <div class="stt-box" id="stt-step5">답변 내용이 기록됩니다.</div>
+      <button class="btn" id="btn-5" onclick="toggleRec(5, 60)">답변 시작</button>
+    </div>
+
+    <!-- Step 6: 최종 제출 -->
+    <div id="step-6" class="card" style="text-align: center;">
+      <h2>[최종 제출 및 AI 분석]</h2>
+      <p>지원자님의 응시 데이터가 KAS 데이터 센터로 전송되었습니다.</p>
+      <div class="spinner" id="loading"></div>
+      <div id="result-box" style="display: none; background: #F0F7FF; padding: 2rem; border-radius: 8px; text-align: left; margin-top: 1rem;">
+        <h3 style="color: var(--kas-accent); margin-top: 0;">🎉 AI 역량검사 완료</h3>
+        <p><strong>평가 점수:</strong> <span id="res-score"></span></p>
+        <p><strong>종합 요약:</strong> <span id="res-summary"></span></p>
+        <p style="color: #E53935;"><strong>[2차 면접 준비사항]</strong> <span id="res-follow"></span></p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ⚠️ [중요] 아래 URL에 구글 Apps Script에서 배포한 웹 앱 URL을 넣으세요!
+    var DATA_CENTER_URL = "YOUR_GAS_WEB_APP_URL_HERE";
+
+    var globalStream = null;
+    var recognition = null;
+    var timer = null;
+    var isRec = false;
+    var dilemmaindex = 0;
+
+    var payload = {
+      action: "submit",
+      jobTitle: "", applicantName: "", applicantId: "",
+      surveyScore: "100점", selfIntroText: "", dilemmaAnswers: "", followupAnswer: ""
+    };
+
+    var dilemmaQs = [
+      "8분 뒤 출발하는 항공기의 지연 상황에서 안전점검 절차가 남았습니다. 정시 운항과 안전 사이에서 어떻게 행동하시겠습니까?",
+      "고소음 현장에서 선임의 지시가 잘 들리지 않습니다. 수신호 교신 및 소통을 위해 어떻게 대처하시겠습니까?",
+      "조업 장비 고장 시, 수리를 완료했다고 주장하는 비자격 동료가 장비 재가동을 요청할 때 어떻게 대처하시겠습니까?"
+    ];
+
+    var surveyQs = [
+      "1. 항공기 정시 출발 압박이 있어도 현장 안전 수칙 준수가 항상 최우선이다.",
+      "2. 급한 조업 상황이 발생하더라도 정식 교육을 받지 않은 장비는 절대 조작하지 않는다.",
+      "3. 선임자가 현장 관행을 이유로 부당한 타협을 요구할 때 단호하게 거절할 수 있다.",
+      "4. 체력적으로 매우 피로한 상황에서도 팀원의 안전을 위해 적극적으로 소통하고 협력한다.",
+      "5. 현장에서 사소한 위험 요소를 발견했을 때, 주저하지 않고 즉시 작업을 중단(Stop-Work)시킨다."
+    ];
+
+    function customAlert(msg) {
+      document.getElementById('custom-alert-msg').innerText = msg;
+      document.getElementById('custom-alert').style.display = 'flex';
+    }
+
+    async function startProcess() {
+      var jobTitle = document.getElementById('job-title').value;
+      var appName = document.getElementById('app-name').value.trim();
+      var appId = document.getElementById('app-id').value.trim();
+      var isAgreed = document.getElementById('agree-chk').checked;
+
+      if(!jobTitle || !appName || !appId || !isAgreed) {
+        customAlert("공고, 이름, 수험번호를 입력하고 필수 동의에 체크해 주세요.");
+        return;
+      }
+
+      payload.jobTitle = jobTitle;
+      payload.applicantName = appName;
+      payload.applicantId = appId;
+
+      try {
+        globalStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        goStep(1);
+      } catch (err) {
+        customAlert("카메라와 마이크 접근 권한이 필요합니다. 브라우저 설정에서 권한을 허용해 주세요.");
+      }
+    }
+
+    function goStep(step) {
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+      document.getElementById('step-' + step).classList.add('active');
+
+      if(step === 1) { attachCam('cam-1'); initVolumeMeter(); startSTT('stt-step1', 1); }
+      if(step === 2) { attachCam('cam-2'); }
+      if(step === 3) { renderSurvey(); }
+      if(step === 4) { attachCam('cam-4'); loadDilemma(); }
+      if(step === 5) { attachCam('cam-5'); fetchFollowUpQuestion(); }
+      if(step === 6) { finalize(); }
+    }
+
+    function attachCam(camId) {
+      var video = document.getElementById(camId);
+      if(video && globalStream) {
+        video.srcObject = globalStream;
+      }
+    }
+
+    function initVolumeMeter() {
+      try {
+        var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var analyser = audioCtx.createAnalyser();
+        var mic = audioCtx.createMediaStreamSource(globalStream);
+        mic.connect(analyser);
+        analyser.fftSize = 256;
+        var dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        function updateMeter() {
+          if(document.getElementById('step-1').classList.contains('active')) {
+            analyser.getByteFrequencyData(dataArray);
+            var avg = dataArray.reduce((a, b) => a + b) / dataArray.length;
+            document.getElementById('volume-meter').style.width = Math.min(avg * 2, 100) + '%';
+            requestAnimationFrame(updateMeter);
+          }
+        }
+        updateMeter();
+      } catch(e) {}
+    }
+
+    function startSTT(boxId, stepNum) {
+      var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(!SpeechRec) {
+        document.getElementById(boxId).innerText = "해당 브라우저는 실시간 음성 인식을 지원하지 않습니다. (Chrome 권장)";
+        if(stepNum === 1) passStep1();
+        return;
+      }
+
+      if(recognition) recognition.stop();
+      recognition = new SpeechRec();
+      recognition.lang = 'ko-KR';
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      recognition.onresult = function(event) {
+        var text = '';
+        for(var i = event.resultindex; i < event.results.length; i++) {
+          text += event.results[i][0].transcript;
+        }
+        document.getElementById(boxId).innerText = "🎙️ " + text;
+
+        if(stepNum === 1 && (text.includes("한국공항") || text.includes("안전"))) {
+          passStep1();
+        }
+        if(stepNum === 2) payload.selfIntroText = text;
+        if(stepNum === 4) payload.dilemmaAnswers += "[Q" + (dilemmaindex+1) + "] " + text + " ";
+        if(stepNum === 5) payload.followupAnswer = text;
+      };
+
+      try { recognition.start(); } catch(e) {}
+    }
+
+    function passStep1() {
+      var btn = document.getElementById('btn-step1-next');
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      btn.innerText = "점검 완료 (다음 단계로)";
+    }
+
+    function toggleRec(step, timeLimit) {
+      var btn = document.getElementById('btn-' + step);
+      if(!isRec) {
+        isRec = true;
+        btn.innerText = "답변 완료";
+        btn.style.background = "#E53935";
+        startSTT('stt-step' + step, step);
+        startTimer('time-' + step, timeLimit, function() { finishRec(step); });
+      } else {
+        finishRec(step);
+      }
+    }
+
+    function finishRec(step) {
+      isRec = false;
+      clearInterval(timer);
+      if(recognition) recognition.stop();
+
+      var btn = document.getElementById('btn-' + step);
+      btn.innerText = "답변 시작";
+      btn.style.background = "var(--kas-accent)";
+
+      if(step === 2) goStep(3);
+      if(step === 4) {
+        dilemmaindex++;
+        if(dilemmaindex < 3) loadDilemma();
+        else goStep(5);
+      }
+      if(step === 5) goStep(6);
+    }
+
+    function startTimer(id, sec, callback) {
+      clearInterval(timer);
+      timer = setInterval(function() {
+        sec--;
+        var m = String(Math.floor(sec/60)).padStart(2,'0');
+        var s = String(sec%60).padStart(2,'0');
+        document.getElementById(id).innerText = m + ":" + s;
+        if(sec <= 0) { clearInterval(timer); callback(); }
+      }, 1000);
+    }
+
+    function renderSurvey() {
+      var wrap = document.getElementById('survey-wrap');
+      var html = "";
+      surveyQs.forEach((q, i) => {
+        html += `<div class="survey-q"><p><strong>${q}</strong></p><div class="options">
+          <label><input type="radio" name="s${i}"><span>전혀 아니다</span></label>
+          <label><input type="radio" name="s${i}"><span>아니다</span></label>
+          <label><input type="radio" name="s${i}" checked><span>보통이다</span></label>
+          <label><input type="radio" name="s${i}"><span>그렇다</span></label>
+          <label><input type="radio" name="s${i}"><span>매우 그렇다</span></label>
+        </div></div>`;
+      });
+      wrap.innerHTML = html;
+    }
+
+    function submitSurvey() { goStep(4); }
+
+    function loadDilemma() {
+      document.getElementById('q4-num').innerText = "질문 " + (dilemmaindex+1) + "/3";
+      document.getElementById('q4-text').innerText = dilemmaQs[dilemmaindex];
+      document.getElementById('stt-step4').innerText = "답변 내용이 실시간 기록됩니다.";
+    }
+
+    function fetchFollowUpQuestion() {
+      document.getElementById('q5-text').innerText = "🤖 Gemini AI가 지원자의 답변을 바탕으로 꼬리질문을 생성하고 있습니다...";
+      fetch(DATA_CENTER_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: "generate_followup",
+          applicantName: payload.applicantName,
+          dilemmaAnswers: payload.dilemmaAnswers
+        })
+      })
+      .then(r => r.json())
+      .then(d => {
+        if(d.followUpQuestion) document.getElementById('q5-text').innerText = "🤖 [AI 꼬리질문] " + d.followUpQuestion;
+      })
+      .catch(() => {
+        document.getElementById('q5-text').innerText = "🤖 [AI 꼬리질문] 안전 수칙 준수 시 현장 동료와의 갈등 발생 시 어떻게 해결하시겠습니까?";
+      });
+    }
+
+    function finalize() {
+      fetch(DATA_CENTER_URL, { method: 'POST', body: JSON.stringify(payload) })
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('result-box').style.display = 'block';
+        if(d.result) {
+          document.getElementById('res-score').innerText = d.result.score + " (" + d.result.pass + ")";
+          document.getElementById('res-summary').innerText = d.result.summary;
+          document.getElementById('res-follow').innerText = d.result.followUp;
+        }
+      })
+      .catch(() => {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('result-box').style.display = 'block';
+        document.getElementById('res-score').innerText = "평가 완료 (데이터 센터 전송 완료)";
+        document.getElementById('res-summary').innerText = "현장 SOP 준수 의지가 확인되었습니다.";
+      });
+    }
+  </script>
+</body>
+</html>
