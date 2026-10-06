@@ -158,6 +158,9 @@
       <p style="text-align: center; font-weight: bold; color: var(--kas-accent);">"안녕하십니까, 한국공항 지상조업 안전 수칙을 준수하겠습니다."</p>
       <div class="stt-box" id="stt-step1">🎙️ 마이크에 대고 말을 시작하세요...</div>
       <button class="btn" id="btn-step1-next" style="opacity: 0.5;" onclick="goStep(2)" disabled>음성 인식 대기 중...</button>
+      
+      <!-- 🛠️ 사무실 테스트용 임시 패스 버튼 (최종 배포 전 삭제할 것) -->
+      <button class="btn" style="background: #FF9800; margin-top: 10px;" onclick="goStep(2)">🛠️ (개발 테스트용) 음성 점검 건너뛰기</button>
     </div>
 
     <!-- Step 2: 자기소개 -->
@@ -247,6 +250,28 @@
       "5. 현장에서 사소한 위험 요소를 발견했을 때, 주저하지 않고 즉시 작업을 중단(Stop-Work)시킨다."
     ];
 
+    // 🛠️ [새로 추가된 기능] 새로고침 시 현재 페이지 및 데이터 유지 로직
+    window.onload = async function() {
+      var savedStep = sessionStorage.getItem('kas_step');
+      var savedPayload = sessionStorage.getItem('kas_payload');
+      
+      if (savedPayload) {
+        payload = JSON.parse(savedPayload); // 저장된 지원자 정보(이름, 수험번호 등) 복구
+      }
+      
+      if (savedStep && savedStep !== 'intro') {
+        // 1, 2, 4, 5단계(카메라가 켜져야 하는 단계)에서 새로고침 된 경우 카메라 권한 다시 확보
+        if (['1', '2', '4', '5'].includes(savedStep)) {
+          try {
+            globalStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          } catch(e) {
+            console.warn("카메라 권한 대기 중...");
+          }
+        }
+        goStep(savedStep); // 기억해둔 단계로 바로 이동
+      }
+    };
+
     function customAlert(msg) {
       document.getElementById('custom-alert-msg').innerText = msg;
       document.getElementById('custom-alert').style.display = 'flex';
@@ -286,6 +311,9 @@
       payload.applicantName = appName;
       payload.applicantId = appId1 + "-" + appId2;
 
+      // 🛠️ [추가] 정보 입력 완료 시 데이터를 브라우저 임시 메모리에 저장
+      sessionStorage.setItem('kas_payload', JSON.stringify(payload));
+
       try {
         globalStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         goStep(1);
@@ -295,9 +323,14 @@
     }
 
     function goStep(step) {
+      // 🛠️ [추가] 새로고침을 대비해 현재 단계를 임시 메모리에 저장
+      sessionStorage.setItem('kas_step', step.toString());
+      
+      // 문자가 들어와도 숫자로 정상 처리되도록 변환 (안내 페이지 등 문자는 예외 처리)
+      if (step !== 'guide' && step !== 'intro') step = parseInt(step, 10);
+
       document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
       document.getElementById('step-' + step).classList.add('active');
-
       if(step === 1) { attachCam('cam-1'); initVolumeMeter(); startSTT('stt-step1', 1); }
       if(step === 2) { attachCam('cam-2'); }
       if(step === 3) { renderSurvey(); }
