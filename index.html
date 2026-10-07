@@ -501,7 +501,8 @@
         customAlert("이름은 한글 또는 영문으로만 정확히 입력해 주세요."); return;
       }
       
-      if (!/^\d{4}$/.test(appId1) \vert{}\vert{} !/^\d{6}$/.test(appId2)) {
+      // 🛠️ 외계어로 깨졌던 \vert{}\vert{} 부분을 정상적인 || (OR 연산자)로 복구했습니다.
+      if (!/^\d{4}$/.test(appId1) || !/^\d{6}$/.test(appId2)) {
         customAlert("수험번호는 앞 4자리, 뒤 6자리의 숫자로 입력해 주세요."); return;
       }
 
