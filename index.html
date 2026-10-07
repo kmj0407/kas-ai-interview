@@ -532,8 +532,8 @@
       // 🛠️ [추가] 새로고침을 대비해 현재 단계를 임시 메모리에 저장
       sessionStorage.setItem('kas_step', step.toString());
       
-      // 문자가 들어와도 숫자로 정상 처리되도록 변환 (안내 페이지 등 문자는 예외 처리)
-      if (step !== 'guide' && step !== 'intro') step = parseInt(step, 10);
+      // 문자가 들어와도 숫자로 정상 처리되도록 변환 (안내, 게임 등 문자는 예외 처리)
+      if (step !== 'guide' && step !== 'intro' && step !== 'game') step = parseInt(step, 10);
       
       // ✈️ [신규 기능] 프로그레스 바 UI 업데이트 로직
       var progBar = document.getElementById('progress-bar');
@@ -881,7 +881,8 @@
           break;
         case 'step-1': goStep(2); break;
         case 'step-2': goStep(3); break;
-        case 'step-3': goStep(4); break;
+        case 'step-3': goStep('game'); initDragAndDrop(); break; // 🎮 3단계 패스 시 게임으로!
+        case 'step-game': goStep(4); break; // 🎮 게임 패스 시 4단계 딜레마로!
         case 'step-4':
           dilemmaIndex++;
           if (dilemmaIndex < 3) loadDilemma();
