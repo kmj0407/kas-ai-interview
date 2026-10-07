@@ -338,7 +338,7 @@
 
   <script>
     // ⚠️ [중요] 아래 URL에 구글 Apps Script에서 배포한 웹 앱 URL을 넣으세요!
-    var DATA_CENTER_URL = "https://script.google.com/a/macros/kas.co.kr/s/AKfycbwx0tQGcJCE_e9ZxAajo84zG0AFBVUQuTkBoWtWEDF3unpVD2ab7BvMHSv-uRODgLm7BA/exec";
+    var DATA_CENTER_URL = "https://script.google.com/a/macros/kas.co.kr/s/AKfycbyJlK5NAInCst8icblbREfcK289MtrHwszMyAh9Gwuq5C4LKdcLwBtZEG6UaKbQolSkPg/exec";
 
     var globalStream = null;
     var recognition = null;
@@ -349,8 +349,21 @@
     var payload = {
       action: "submit",
       jobTitle: "", applicantName: "", applicantId: "",
-      surveyScore: "100점", selfIntroText: "", dilemmaAnswers: "", followupAnswer: ""
+      surveyScore: "100점", selfIntroText: "", dilemmaAnswers: "", followupAnswer: "",
+      cheatCount: 0 // 🚨 [신규] 화면 이탈(부정행위) 횟수 기록용
     };
+
+    // 🚨 [신규 기능] 화면 이탈 감지 센서 (다른 탭으로 이동 시 발동)
+    document.addEventListener("visibilitychange", function() {
+      // 면접 진행 중(1단계 이상)일 때만 감지 (대문 화면에서는 검색할 수도 있으므로 예외)
+      var activeCard = document.querySelector('.card.active');
+      if (document.hidden && activeCard && activeCard.id !== 'step-intro' && activeCard.id !== 'step-guide' && activeCard.id !== 'step-0' && activeCard.id !== 'step-6') {
+        payload.cheatCount += 1;
+        sessionStorage.setItem('kas_payload', JSON.stringify(payload)); // 기억 장치에도 즉시 갱신
+        
+        customAlert("⚠️ [부정행위 경고]\n다른 창이나 탭으로 이동한 기록이 감지되었습니다.\n현재 이탈 횟수: " + payload.cheatCount + "회\n(반복될 경우 KAS 면접 평가에 불이익이 발생합니다.)");
+      }
+    });
 
     var dilemmaQs = [
       "8분 뒤 출발하는 항공기의 지연 상황에서 안전점검 절차가 남았습니다. 정시 운항과 안전 사이에서 어떻게 행동하시겠습니까?",
