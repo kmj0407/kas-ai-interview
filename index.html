@@ -158,21 +158,16 @@
       <p style="text-align: center; font-weight: bold; color: var(--kas-accent);">"안녕하십니까, 한국공항 지상조업 안전 수칙을 준수하겠습니다."</p>
       <div class="stt-box" id="stt-step1">🎙️ 마이크에 대고 말을 시작하세요...</div>
       <button class="btn" id="btn-step1-next" style="opacity: 0.5;" onclick="goStep(2)" disabled>음성 인식 대기 중...</button>
-      
-      <!-- 🛠️ 사무실 테스트용 임시 패스 버튼 (최종 배포 전 삭제할 것) -->
-      <button class="btn" style="background: #FF9800; margin-top: 10px;" onclick="goStep(2)">🛠️ (개발 테스트용) 음성 점검 건너뛰기</button>
-    </div>
 
     <!-- Step 2: 자기소개 -->
     <div id="step-2" class="card">
-      <h2>[자기소개 및 지원동기 (1분)]</h2>
-      <div class="timer" id="time-2">01:00</div>
+      <h2>[자기소개 및 지원동기]</h2>
+      <div class="timer" id="time-2" style="color: #666;">00:00</div>
       <div class="media-box"><video id="cam-2" autoplay muted playsinline></video></div>
-      <p>한국공항 지상조업 직무 지원 동기와 본인의 강점을 말씀해 주세요.</p>
+      <p id="q2-hidden-msg" style="color: #666; font-weight: bold; text-align: center;">버튼을 누르면 질문이 공개되고 준비 시간(30초)이 시작됩니다.</p>
+      <p id="q2-text" style="font-size: 1.1rem; font-weight: bold; display: none;">한국공항 지상조업 직무 지원 동기와 본인의 강점을 말씀해 주세요. (답변 1분)</p>
       <div class="stt-box" id="stt-step2">답변 내용이 실시간으로 자막 변환됩니다.</div>
-      <button class="btn" id="btn-2" onclick="toggleRec(2, 60)">답변 시작</button>
-      <!-- 🛠️ 사무실 테스트용 임시 패스 버튼 (최종 배포 전 삭제할 것) -->
-      <button class="btn" style="background: #FF9800; margin-top: 10px;" onclick="goStep(2)">🛠️ (개발 테스트용) 음성 점검 건너뛰기</button>
+      <button class="btn" id="btn-2" onclick="startPrep(2, 30, 60)">질문 확인 및 준비 시작</button>
     </div>
 
     <!-- Step 3: 인성 성향 검사 -->
@@ -188,22 +183,24 @@
       <h2>[현장 딜레마 AI 역량검사]</h2>
       <div style="display: flex; justify-content: space-between;">
         <span style="font-weight: bold; color: var(--kas-accent);" id="q4-num">질문 1/3</span>
-        <div class="timer" id="time-4">02:00</div>
+        <div class="timer" id="time-4" style="color: #666;">00:00</div>
       </div>
       <div class="media-box"><video id="cam-4" autoplay muted playsinline></video></div>
-      <p id="q4-text" style="font-size: 1.1rem; font-weight: bold;">질문 불러오는 중...</p>
+      <p id="q4-hidden-msg" style="color: #666; font-weight: bold; text-align: center;">버튼을 누르면 상황 딜레마 질문이 공개됩니다.</p>
+      <p id="q4-text" style="font-size: 1.1rem; font-weight: bold; display: none;"></p>
       <div class="stt-box" id="stt-step4">답변 내용이 실시간 기록됩니다.</div>
-      <button class="btn" id="btn-4" onclick="toggleRec(4, 120)">답변 시작</button>
+      <button class="btn" id="btn-4" onclick="startPrep(4, 30, 90)">질문 확인 및 준비 시작</button>
     </div>
 
     <!-- Step 5: 실시간 심층 꼬리질문 -->
     <div id="step-5" class="card">
       <h2>[AI 실시간 심층 꼬리질문]</h2>
-      <div class="timer" id="time-5">01:00</div>
+      <div class="timer" id="time-5" style="color: #666;">00:00</div>
       <div class="media-box"><video id="cam-5" autoplay muted playsinline></video></div>
-      <p id="q5-text" style="font-size: 1.05rem; font-weight: bold; color: #E53935;">🤖 [Gemini AI 꼬리질문 생성 중...]</p>
+      <p id="q5-hidden-msg" style="color: #666; font-weight: bold; text-align: center;">답변을 분석하여 AI 꼬리질문을 생성 중입니다...</p>
+      <p id="q5-text" style="font-size: 1.05rem; font-weight: bold; color: #E53935; display: none;"></p>
       <div class="stt-box" id="stt-step5">답변 내용이 기록됩니다.</div>
-      <button class="btn" id="btn-5" onclick="toggleRec(5, 60)">답변 시작</button>
+      <button class="btn" id="btn-5" disabled>꼬리질문 생성 대기 중...</button>
     </div>
 
     <!-- Step 6: 최종 제출 -->
@@ -406,46 +403,87 @@
       btn.innerText = "점검 완료 (다음 단계로)";
     }
 
-    function toggleRec(step, timeLimit) {
+    // 🛠️ [신규 기능] 준비 시간(30초) 타이머 및 UI 제어
+    function startPrep(step, prepTime, ansTime) {
+      // 1. 안내 메시지 숨기고 질문 텍스트 공개
+      var msgEl = document.getElementById('q' + step + '-hidden-msg');
+      var textEl = document.getElementById('q' + step + '-text');
+      if(msgEl) msgEl.style.display = 'none';
+      if(textEl) textEl.style.display = 'block';
+
+      // 2. 버튼을 '준비 완료 (바로 답변하기)' 로 변경
       var btn = document.getElementById('btn-' + step);
-      if(!isRec) {
-        isRec = true;
-        btn.innerText = "답변 완료";
-        btn.style.background = "#E53935";
-        startSTT('stt-step' + step, step);
-        startTimer('time-' + step, timeLimit, function() { finishRec(step); });
-      } else {
-        finishRec(step);
-      }
+      btn.style.background = "#FF9800"; // 주황색
+      btn.innerText = "준비 완료 (바로 답변하기)";
+      btn.onclick = function() { startAnswer(step, ansTime); };
+
+      var timerEl = document.getElementById('time-' + step);
+      timerEl.style.color = "#FF9800";
+      
+      clearInterval(timer);
+      var pTime = prepTime;
+      
+      timerEl.innerText = "준비: 00:" + String(pTime).padStart(2,'0');
+
+      timer = setInterval(function() {
+        pTime--;
+        var m = String(Math.floor(pTime/60)).padStart(2,'0');
+        var s = String(pTime%60).padStart(2,'0');
+        timerEl.innerText = "준비: " + m + ":" + s;
+        
+        if(pTime <= 0) {
+          clearInterval(timer);
+          startAnswer(step, ansTime); // 준비시간 끝나면 답변으로 자동 전환
+        }
+      }, 1000);
+    }
+
+    // 🛠️ [신규 기능] 실제 답변 시간 타이머 및 STT 시작
+    function startAnswer(step, ansTime) {
+      isRec = true;
+      startSTT('stt-step' + step, step); // 음성 인식 시작
+      
+      var timerEl = document.getElementById('time-' + step);
+      timerEl.style.color = "#E53935"; // 빨간색
+      
+      var btn = document.getElementById('btn-' + step);
+      btn.style.background = "#E53935";
+      btn.innerText = "답변 완료 (다음으로)";
+      btn.onclick = function() { finishRec(step); };
+
+      clearInterval(timer);
+      var aTime = ansTime;
+      
+      var m = String(Math.floor(aTime/60)).padStart(2,'0');
+      var s = String(aTime%60).padStart(2,'0');
+      timerEl.innerText = "답변: " + m + ":" + s;
+
+      timer = setInterval(function() {
+        aTime--;
+        var m = String(Math.floor(aTime/60)).padStart(2,'0');
+        var s = String(aTime%60).padStart(2,'0');
+        timerEl.innerText = "답변: " + m + ":" + s;
+        
+        if(aTime <= 0) {
+          clearInterval(timer);
+          finishRec(step); // 답변 시간 끝나면 자동 제출
+        }
+      }, 1000);
     }
 
     function finishRec(step) {
       isRec = false;
       clearInterval(timer);
-      if(recognition) recognition.stop();
+      if(recognition) { try { recognition.stop(); } catch(e){} }
 
-      var btn = document.getElementById('btn-' + step);
-      btn.innerText = "답변 시작";
-      btn.style.background = "var(--kas-accent)";
-
+      // 단계별 이동 로직
       if(step === 2) goStep(3);
       if(step === 4) {
-        dilemmaindex++;
-        if(dilemmaindex < 3) loadDilemma();
+        dilemmaIndex++;
+        if(dilemmaIndex < 3) loadDilemma();
         else goStep(5);
       }
       if(step === 5) goStep(6);
-    }
-
-    function startTimer(id, sec, callback) {
-      clearInterval(timer);
-      timer = setInterval(function() {
-        sec--;
-        var m = String(Math.floor(sec/60)).padStart(2,'0');
-        var s = String(sec%60).padStart(2,'0');
-        document.getElementById(id).innerText = m + ":" + s;
-        if(sec <= 0) { clearInterval(timer); callback(); }
-      }, 1000);
     }
 
     function renderSurvey() {
@@ -465,14 +503,33 @@
 
     function submitSurvey() { goStep(4); }
 
+    // 🛠️ 딜레마 문제 로드 (상태 초기화 포함)
     function loadDilemma() {
-      document.getElementById('q4-num').innerText = "질문 " + (dilemmaindex+1) + "/3";
-      document.getElementById('q4-text').innerText = dilemmaQs[dilemmaindex];
+      document.getElementById('q4-num').innerText = "질문 " + (dilemmaIndex+1) + "/3";
+      document.getElementById('q4-text').innerText = dilemmaQs[dilemmaIndex];
+      
+      // UI 블라인드 초기화
+      document.getElementById('q4-text').style.display = 'none';
+      document.getElementById('q4-hidden-msg').style.display = 'block';
       document.getElementById('stt-step4').innerText = "답변 내용이 실시간 기록됩니다.";
+      document.getElementById('time-4').innerText = "00:00";
+      document.getElementById('time-4').style.color = "#666";
+      
+      var btn = document.getElementById('btn-4');
+      btn.style.background = "var(--kas-accent)";
+      btn.innerText = "질문 확인 및 준비 시작";
+      btn.onclick = function() { startPrep(4, 30, 90); }; // 30초 준비, 90초 답변
     }
 
+    // 🛠️ AI 꼬리질문 생성 (상태 초기화 포함)
     function fetchFollowUpQuestion() {
-      document.getElementById('q5-text').innerText = "🤖 Gemini AI가 지원자의 답변을 바탕으로 꼬리질문을 생성하고 있습니다...";
+      var btn = document.getElementById('btn-5');
+      btn.disabled = true;
+      btn.style.background = "#999";
+      btn.innerText = "🤖 꼬리질문 생성 중...";
+      document.getElementById('q5-text').style.display = 'none';
+      document.getElementById('q5-hidden-msg').style.display = 'block';
+
       fetch(DATA_CENTER_URL, {
         method: 'POST',
         body: JSON.stringify({
@@ -483,11 +540,57 @@
       })
       .then(r => r.json())
       .then(d => {
-        if(d.followUpQuestion) document.getElementById('q5-text').innerText = "🤖 [AI 꼬리질문] " + d.followUpQuestion;
+        if(d.followUpQuestion) {
+          document.getElementById('q5-text').innerText = "🤖 [AI 꼬리질문] " + d.followUpQuestion;
+          setupStep5Btn();
+        }
       })
       .catch(() => {
         document.getElementById('q5-text').innerText = "🤖 [AI 꼬리질문] 안전 수칙 준수 시 현장 동료와의 갈등 발생 시 어떻게 해결하시겠습니까?";
+        setupStep5Btn();
       });
+      
+      function setupStep5Btn() {
+        document.getElementById('q5-hidden-msg').innerText = "앞선 답변을 분석하여 AI 꼬리질문을 생성했습니다. 버튼을 눌러 확인하세요.";
+        btn.disabled = false;
+        btn.style.background = "var(--kas-accent)";
+        btn.innerText = "질문 확인 및 준비 시작";
+        btn.onclick = function() { startPrep(5, 30, 60); }; // 30초 준비, 60초 답변
+      }
+    }
+    // 🛠️ [개발 테스트용] 현재 페이지 인식 및 강제 패스 로직
+    function forceSkipStep() {
+      var activeCard = document.querySelector('.card.active');
+      if (!activeCard) return;
+      var currentId = activeCard.id;
+
+      // 켜져 있는 타이머 및 마이크 강제 종료
+      clearInterval(timer);
+      isRec = false;
+      if(recognition) { try { recognition.stop(); } catch(e){} }
+
+      // 현재 단계에 맞춰 다음 단계로 이동
+      switch(currentId) {
+        case 'step-intro': goStep('guide'); break;
+        case 'step-guide': goStep(0); break;
+        case 'step-0':
+          // 0단계 패스 시 에러가 나지 않도록 가짜(Mock) 데이터를 채워줍니다.
+          if(!payload.applicantName) payload.applicantName = "개발자테스트";
+          if(!payload.applicantId) payload.applicantId = "0000-000000";
+          if(!payload.jobTitle) payload.jobTitle = "[테스트] 지상조업";
+          goStep(1); 
+          break;
+        case 'step-1': goStep(2); break;
+        case 'step-2': goStep(3); break;
+        case 'step-3': goStep(4); break;
+        case 'step-4':
+          dilemmaIndex++;
+          if (dilemmaIndex < 3) loadDilemma();
+          else goStep(5);
+          break;
+        case 'step-5': goStep(6); break;
+        case 'step-6': customAlert("분석 및 제출 중이거나 완료된 상태이므로 패스할 수 없습니다."); break;
+      }
     }
 
     function finalize() {
@@ -510,5 +613,9 @@
       });
     }
   </script>
+  <!-- 🛠️ [개발 테스트용] 전역 강제 패스 마스터 버튼 (최종 전사 배포 전 삭제 요망) -->
+  <button id="dev-pass-btn" style="position: fixed; bottom: 20px; right: 20px; background: #FF9800; color: white; border: none; padding: 12px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; z-index: 10000; box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onclick="forceSkipStep()">
+    🛠️ 현재 단계 강제 패스 ⏭️
+  </button>
 </body>
 </html>
