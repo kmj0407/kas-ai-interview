@@ -85,6 +85,13 @@
     .circle-timer-text { position: relative; z-index: 1; text-align: center; }
     .circle-timer-label { font-size: 0.85rem; color: #666; font-weight: bold; margin-bottom: 2px; }
     .circle-timer-time { font-size: 1.8rem; font-weight: bold; line-height: 1; }
+
+    /* 🛡️ [신규 기능] 우선순위 정렬 게임 스타일 */
+    .priority-list { list-style: none; padding: 0; margin: 1.5rem 0; }
+    .priority-item { background: white; border: 2px solid #ddd; padding: 1rem; margin-bottom: 0.8rem; border-radius: 8px; cursor: grab; display: flex; align-items: center; gap: 15px; font-weight: bold; font-size: 1.05rem; transition: background 0.2s, transform 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .priority-item:active { cursor: grabbing; transform: scale(0.98); }
+    .priority-item.dragging { opacity: 0.4; background: #f0f7ff; border-color: var(--kas-accent); }
+    .drag-handle { color: #ccc; cursor: grab; font-size: 1.5rem; }
   </style>
 </head>
 
@@ -268,10 +275,27 @@
 
     <!-- Step 3: 인성 성향 검사 -->
     <div id="step-3" class="card">
-      <h2>[현장 안전 / 인성 성향 검사]</h2>
+      <h2>[현장 안전/인성 성향 검사]</h2>
       <p>지상조업 현장 적응도 및 원칙 준수성을 평가합니다.</p>
       <div id="survey-wrap" style="max-height: 350px; overflow-y: auto; margin-bottom: 1rem;"></div>
       <button class="btn" onclick="submitSurvey()">검사 제출 및 다음 단계</button>
+    </div>
+
+    <!-- 🎮 [새로 추가된 단계] Step Game: 현장 우선순위 판단 -->
+    <div id="step-game" class="card">
+      <h2>[현장 상황 판단력 검사]</h2>
+      <p style="line-height: 1.6; color: #444;">
+        지상조업 현장에서 아래 5가지 상황이 <strong>동시에 발생</strong>했습니다.<br>
+        KAS 안전 규정(SOP)에 따라 <strong style="color: var(--kas-accent);">가장 먼저 처리해야 할 순서대로 위에서부터 마우스로 드래그(Drag)하여 정렬</strong>해 주세요.
+      </p>
+      <ul class="priority-list" id="priority-list">
+        <li class="priority-item" draggable="true"><span class="drag-handle">☰</span> [상황 A] 조업 장비(GSE)에서 원인 모를 경고음과 타는 냄새 발생</li>
+        <li class="priority-item" draggable="true"><span class="drag-handle">☰</span> [상황 B] 탑승교(Boarding Bridge) 접현 작업이 3분 지연됨</li>
+        <li class="priority-item" draggable="true"><span class="drag-handle">☰</span> [상황 C] 타 부서 동료가 무전기로 다급하게 조업 지원을 요청함</li>
+        <li class="priority-item" draggable="true"><span class="drag-handle">☰</span> [상황 D] 수하물 적재 목록(Loadsheet) 서류 변경으로 현장 확인이 필요함</li>
+        <li class="priority-item" draggable="true"><span class="drag-handle">☰</span> [상황 E] 항공기 엔진 주변(보호구역)에 날카로운 외부 이물질(FOD) 발견</li>
+      </ul>
+      <button class="btn" onclick="submitGame()">정렬 완료 및 다음 단계</button>
     </div>
 
     <!-- Step 4: 딜레마 AI 역량검사 -->
@@ -350,9 +374,9 @@
       action: "submit",
       jobTitle: "", applicantName: "", applicantId: "",
       surveyScore: "100점", selfIntroText: "", dilemmaAnswers: "", followupAnswer: "",
-      cheatCount: 0 // 🚨 [신규] 화면 이탈(부정행위) 횟수 기록용
+      cheatCount: 0, // 🚨 [신규] 화면 이탈(부정행위) 횟수 기록용
+      gameResult: "" // 🎮 [신규] 상황 판단 게임 정렬 결과
     };
-
     // 🚨 [신규 기능] 화면 이탈 감지 센서 (다른 탭으로 이동 시 발동)
     document.addEventListener("visibilitychange", function() {
       // 면접 진행 중(1단계 이상)일 때만 감지 (대문 화면에서는 검색할 수도 있으므로 예외)
@@ -366,17 +390,27 @@
     });
 
     var dilemmaQs = [
-      "8분 뒤 출발하는 항공기의 지연 상황에서 안전점검 절차가 남았습니다. 정시 운항과 안전 사이에서 어떻게 행동하시겠습니까?",
-      "고소음 현장에서 선임의 지시가 잘 들리지 않습니다. 수신호 교신 및 소통을 위해 어떻게 대처하시겠습니까?",
-      "조업 장비 고장 시, 수리를 완료했다고 주장하는 비자격 동료가 장비 재가동을 요청할 때 어떻게 대처하시겠습니까?"
+      "항공기 출발 시간이 임박한 상황에서, 필수 안전 점검이 아직 끝나지 않았습니다. 정시 운항과 안전 사이에서 어떻게 대처하시겠습니까?",
+      "고소음 현장에서 선임의 작업 지시가 전혀 들리지 않습니다. 이때 어떻게 소통하고 행동하시겠습니까?",
+      "고장 났던 조업 장비를 자격증이 없는 동료가 임의로 고쳤다며 당장 사용하자고 합니다. 어떻게 대처하시겠습니까?"
     ];
 
     var surveyQs = [
-      "1. 항공기 정시 출발 압박이 있어도 현장 안전 수칙 준수가 항상 최우선이다.",
-      "2. 급한 조업 상황이 발생하더라도 정식 교육을 받지 않은 장비는 절대 조작하지 않는다.",
-      "3. 선임자가 현장 관행을 이유로 부당한 타협을 요구할 때 단호하게 거절할 수 있다.",
-      "4. 체력적으로 매우 피로한 상황에서도 팀원의 안전을 위해 적극적으로 소통하고 협력한다.",
-      "5. 현장에서 사소한 위험 요소를 발견했을 때, 주저하지 않고 즉시 작업을 중단(Stop-Work)시킨다."
+      "1. [안전 최우선] 항공기 정시 출발(On-Time Performance) 압박이 있어도 현장 안전 수칙 준수가 항상 최우선이다.",
+      "2. [규정 준수] 급한 조업 상황이 발생하더라도 정식 자격이나 교육을 받지 않은 지상조업 장비(GSE)는 절대 조작하지 않는다.",
+      "3. [원칙 고수] 선임자나 동료가 현장 관행을 이유로 부당한 안전 타협을 요구할 때 단호하게 거절할 수 있다.",
+      "4. [협업/소통] 체력적으로 매우 피로한 상황에서도 팀원의 안전과 원활한 조업을 위해 적극적으로 소통하고 협력한다.",
+      "5. [위험 감지] 현장에서 사소한 위험 요소나 장비 결함을 발견했을 때, 주저하지 않고 즉시 작업을 중단(Stop-Work)시킨다.",
+      "6. [환경 적응] 폭우, 폭설, 강풍 등 악천후 램프(Ramp) 상황에서도 규정된 보호장구를 핑계 없이 반드시 착용한다.",
+      "7. [책임감] 조업 장비(GSE) 운행 전후 점검 시, 아주 사소한 외관 스크래치나 누유 현상이라도 즉시 보고한다.",
+      "8. [타 부서 배려] 타 부서(정비, 여객, 화물 등)와 작업 동선이 겹칠 때, 서로의 안전과 효율을 먼저 배려하고 조율한다.",
+      "9. [품질 유지] 수하물 및 화물 조업 시 시간 지연이 예상되더라도, 파손 방지와 정확한 적재(Load Control) 규정을 우선시한다.",
+      "10. [정확성] 현장 소음이 심한 계류장에서는 무전이나 수신호가 100% 명확히 확인될 때까지 임의로 다음 행동을 하지 않는다.",
+      "11. [기본기] 매일 반복되고 익숙한 조업 업무라도 매번 표준작업절차(SOP)를 머릿속으로 되새기며 작업에 임한다.",
+      "12. [동료 의식] 친한 동료가 안전 수칙을 위반하거나 보호구역(Airside) 규정을 어기는 것을 목격하면, 즉각적으로 주의를 준다.",
+      "13. [예방 활동] 항공기 주변(FOD 구역)에서 작은 외부 이물질이나 쓰레기를 발견하면 내 업무가 아니더라도 즉시 수거한다.",
+      "14. [스트레스 내성] 스케줄 근무나 야간 교대 근무로 인한 생체 리듬 불균형 속에서도 현장에서는 항상 고도의 집중력을 유지할 자신이 있다.",
+      "15. [직무 사명감] 나의 작은 조업 실수가 항공기 안전운항과 수백 명의 승객 안전에 직결될 수 있다는 막중한 책임감을 항상 인지하고 있다."
     ];
 
     // 🎬 스플래시 화면 제어 변수
@@ -512,10 +546,9 @@
           var currentProg = 1;
           if (step === 'guide' || step === 0) currentProg = 1;
           else if (step === 1) currentProg = 2;
-          else if (step === 2 || step === 3) currentProg = 3; // 자기소개, 인성검사
+          else if (step === 2 || step === 3 || step === 'game') currentProg = 3; // 자기소개, 인성검사, 게임
           else if (step === 4 || step === 5) currentProg = 4; // 딜레마, 꼬리질문
           else if (step === 6) currentProg = 5;
-
           // CSS 클래스 업데이트
           for (var i = 1; i <= 5; i++) {
               var el = document.getElementById('prog-' + i);
@@ -708,21 +741,62 @@
     }
 
     function renderSurvey() {
-      var wrap = document.getElementById('survey-wrap');
-      var html = "";
-      surveyQs.forEach((q, i) => {
-        html += `<div class="survey-q"><p><strong>${q}</strong></p><div class="options">
-          <label><input type="radio" name="s${i}"><span>전혀 아니다</span></label>
-          <label><input type="radio" name="s${i}"><span>아니다</span></label>
-          <label><input type="radio" name="s${i}" checked><span>보통이다</span></label>
-          <label><input type="radio" name="s${i}"><span>그렇다</span></label>
-          <label><input type="radio" name="s${i}"><span>매우 그렇다</span></label>
-        </div></div>`;
-      });
+      // (중략... renderSurvey 내부 코드는 그대로 두세요)
       wrap.innerHTML = html;
     }
 
-    function submitSurvey() { goStep(4); }
+    // 3단계 제출 시 4단계가 아니라 게임 화면으로 이동!
+    function submitSurvey() { goStep('game'); initDragAndDrop(); }
+
+    // 🎮 [신규 기능] 드래그 앤 드롭 정렬 로직
+    function initDragAndDrop() {
+      const list = document.getElementById('priority-list');
+      let draggedItem = null;
+
+      list.addEventListener('dragstart', function(e) {
+        draggedItem = e.target;
+        setTimeout(() => e.target.classList.add('dragging'), 0);
+      });
+
+      list.addEventListener('dragend', function(e) {
+        e.target.classList.remove('dragging');
+        draggedItem = null;
+      });
+
+      list.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(list, e.clientY);
+        if (afterElement == null) {
+          list.appendChild(draggedItem);
+        } else {
+          list.insertBefore(draggedItem, afterElement);
+        }
+      });
+
+      function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.priority-item:not(.dragging)')];
+        return draggableElements.reduce((closest, child) => {
+          const box = child.getBoundingClientRect();
+          const offset = y - box.top - box.height / 2;
+          if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+          } else {
+            return closest;
+          }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+      }
+    }
+
+    // 🎮 게임 제출 시 데이터를 저장하고 4단계로 이동!
+    function submitGame() {
+      var items = document.querySelectorAll('#priority-list .priority-item');
+      var orderResult = [];
+      items.forEach((item, index) => {
+        orderResult.push((index + 1) + "순위: " + item.innerText.replace('☰ ', '').trim());
+      });
+      payload.gameResult = orderResult.join(' / ');
+      goStep(4);
+    }
 
     // 🛠️ 딜레마 문제 로드 (상태 초기화 포함)
     function loadDilemma() {
