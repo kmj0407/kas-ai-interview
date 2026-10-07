@@ -33,8 +33,6 @@
     .id-input-group .hyphen { font-weight: bold; color: #555; }
   </style>
 </head>
-  </style>
-</head>
 <body>
 
   <!-- 예쁜 커스텀 알림창 -->
@@ -158,6 +156,8 @@
       <p style="text-align: center; font-weight: bold; color: var(--kas-accent);">"안녕하십니까, 한국공항 지상조업 안전 수칙을 준수하겠습니다."</p>
       <div class="stt-box" id="stt-step1">🎙️ 마이크에 대고 말을 시작하세요...</div>
       <button class="btn" id="btn-step1-next" style="opacity: 0.5;" onclick="goStep(2)" disabled>음성 인식 대기 중...</button>
+    </div>
+
 
     <!-- Step 2: 자기소개 -->
     <div id="step-2" class="card">
@@ -380,7 +380,7 @@
 
       recognition.onresult = function(event) {
         var text = '';
-        for(var i = event.resultindex; i < event.results.length; i++) {
+        for(var i = event.resultIndex; i < event.results.length; i++) {
           text += event.results[i][0].transcript;
         }
         document.getElementById(boxId).innerText = "🎙️ " + text;
@@ -389,7 +389,7 @@
           passStep1();
         }
         if(stepNum === 2) payload.selfIntroText = text;
-        if(stepNum === 4) payload.dilemmaAnswers += "[Q" + (dilemmaindex+1) + "] " + text + " ";
+        if(stepNum === 4) payload.dilemmaAnswers += "[Q" + (dilemmaIndex+1) + "] " + text + " ";
         if(stepNum === 5) payload.followupAnswer = text;
       };
 
