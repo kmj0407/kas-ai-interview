@@ -391,22 +391,23 @@
       "고장 났던 조업 장비를 자격증이 없는 동료가 임의로 고쳤다며 당장 사용하자고 합니다. 어떻게 대처하시겠습니까?"
     ];
 
+    // 🛠️ 꼼수 방지를 위해 긍정/부정(역문항)이 섞인 15개 문항 배열
     var surveyQs = [
-      "1. [안전 최우선] 항공기 정시 출발(On-Time Performance) 압박이 있어도 현장 안전 수칙 준수가 항상 최우선이다.",
-      "2. [규정 준수] 급한 조업 상황이 발생하더라도 정식 자격이나 교육을 받지 않은 지상조업 장비(GSE)는 절대 조작하지 않는다.",
-      "3. [원칙 고수] 선임자나 동료가 현장 관행을 이유로 부당한 안전 타협을 요구할 때 단호하게 거절할 수 있다.",
-      "4. [협업/소통] 체력적으로 매우 피로한 상황에서도 팀원의 안전과 원활한 조업을 위해 적극적으로 소통하고 협력한다.",
-      "5. [위험 감지] 현장에서 사소한 위험 요소나 장비 결함을 발견했을 때, 주저하지 않고 즉시 작업을 중단(Stop-Work)시킨다.",
-      "6. [환경 적응] 폭우, 폭설, 강풍 등 악천후 램프(Ramp) 상황에서도 규정된 보호장구를 핑계 없이 반드시 착용한다.",
-      "7. [책임감] 조업 장비(GSE) 운행 전후 점검 시, 아주 사소한 외관 스크래치나 누유 현상이라도 즉시 보고한다.",
-      "8. [타 부서 배려] 타 부서(정비, 여객, 화물 등)와 작업 동선이 겹칠 때, 서로의 안전과 효율을 먼저 배려하고 조율한다.",
-      "9. [품질 유지] 수하물 및 화물 조업 시 시간 지연이 예상되더라도, 파손 방지와 정확한 적재(Load Control) 규정을 우선시한다.",
-      "10. [정확성] 현장 소음이 심한 계류장에서는 무전이나 수신호가 100% 명확히 확인될 때까지 임의로 다음 행동을 하지 않는다.",
-      "11. [기본기] 매일 반복되고 익숙한 조업 업무라도 매번 표준작업절차(SOP)를 머릿속으로 되새기며 작업에 임한다.",
-      "12. [동료 의식] 친한 동료가 안전 수칙을 위반하거나 보호구역(Airside) 규정을 어기는 것을 목격하면, 즉각적으로 주의를 준다.",
-      "13. [예방 활동] 항공기 주변(FOD 구역)에서 작은 외부 이물질이나 쓰레기를 발견하면 내 업무가 아니더라도 즉시 수거한다.",
-      "14. [스트레스 내성] 스케줄 근무나 야간 교대 근무로 인한 생체 리듬 불균형 속에서도 현장에서는 항상 고도의 집중력을 유지할 자신이 있다.",
-      "15. [직무 사명감] 나의 작은 조업 실수가 항공기 안전운항과 수백 명의 승객 안전에 직결될 수 있다는 막중한 책임감을 항상 인지하고 있다."
+      { text: "1. 항공기 정시 출발(On-Time Performance) 압박이 있어도 현장 안전 수칙 준수가 항상 최우선이다.", reverse: false },
+      { text: "2. 급한 조업 상황이 발생하면, 조작 방식이 비슷한 다른 지상조업 장비(GSE)를 임의로 조작해도 무방하다.", reverse: true }, // 🚨 역문항 (아니다가 정답)
+      { text: "3. 선임자나 동료가 현장 관행을 이유로 부당한 안전 타협을 요구할 때 단호하게 거절할 수 있다.", reverse: false },
+      { text: "4. 체력적으로 매우 피로한 상황에서도 팀원의 안전과 원활한 조업을 위해 적극적으로 소통하고 협력한다.", reverse: false },
+      { text: "5. 현장에서 사소한 위험 요소나 장비 결함을 발견하더라도, 당장 큰 문제가 없다면 조업을 그대로 진행한다.", reverse: true }, // 🚨 역문항
+      { text: "6. 폭우, 폭설, 강풍 등 악천후 램프(Ramp) 상황에서도 규정된 보호장구를 핑계 없이 반드시 착용한다.", reverse: false },
+      { text: "7. 조업 장비(GSE) 운행 전후 점검 시, 아주 사소한 외관 스크래치나 누유 현상이라도 즉시 보고한다.", reverse: false },
+      { text: "8. 타 부서(정비, 여객, 화물 등)와 작업 동선이 겹칠 때, 내 담당 업무를 먼저 끝내는 것이 전체 효율성에 더 도움이 된다.", reverse: true }, // 🚨 역문항
+      { text: "9. 수하물 및 화물 조업 시 시간 지연이 예상되더라도, 파손 방지와 정확한 적재(Load Control) 규정을 우선시한다.", reverse: false },
+      { text: "10. 현장 소음이 심한 계류장에서는 무전이나 수신호가 100% 명확히 확인될 때까지 임의로 다음 행동을 하지 않는다.", reverse: false },
+      { text: "11. 매일 반복되고 익숙한 조업 업무는 매번 표준작업절차(SOP)를 확인하기보다 나의 경험에 의존하여 빠르게 처리하는 것이 효율적이다.", reverse: true }, // 🚨 역문항
+      { text: "12. 친한 동료가 안전 수칙을 위반하거나 보호구역(Airside) 규정을 어기는 것을 목격하면, 즉각적으로 주의를 준다.", reverse: false },
+      { text: "13. 항공기 주변(FOD 구역)에서 발견된 작은 외부 이물질이나 쓰레기는 내 담당 업무가 아니라면 굳이 수거할 필요가 없다.", reverse: true }, // 🚨 역문항
+      { text: "14. 스케줄 근무나 야간 교대 근무로 인한 생체 리듬 불균형 속에서도 현장에서는 항상 고도의 집중력을 유지할 자신이 있다.", reverse: false },
+      { text: "15. 나의 작은 조업 실수가 항공기 안전운항과 수백 명의 승객 안전에 직결될 수 있다는 막중한 책임감을 항상 인지하고 있다.", reverse: false }
     ];
 
     // 🎬 스플래시 화면 제어 변수
@@ -726,22 +727,46 @@
       if(step === 5) goStep(6);
     }
 
+    // 🛠️ 객관식 문항 렌더링 (밸류값 추가)
     function renderSurvey() {
       var wrap = document.getElementById('survey-wrap');
       var html = "";
       surveyQs.forEach((q, i) => {
-        html += `<div class="survey-q"><p><strong>${q}</strong></p><div class="options">
-          <label><input type="radio" name="s${i}"><span>전혀 아니다</span></label>
-          <label><input type="radio" name="s${i}"><span>아니다</span></label>
-          <label><input type="radio" name="s${i}" checked><span>보통이다</span></label>
-          <label><input type="radio" name="s${i}"><span>그렇다</span></label>
-          <label><input type="radio" name="s${i}"><span>매우 그렇다</span></label>
+        html += `<div class="survey-q"><p><strong>${q.text}</strong></p><div class="options">
+          <label><input type="radio" name="s${i}" value="1"><span>전혀 아니다</span></label>
+          <label><input type="radio" name="s${i}" value="2"><span>아니다</span></label>
+          <label><input type="radio" name="s${i}" value="3" checked><span>보통이다</span></label>
+          <label><input type="radio" name="s${i}" value="4"><span>그렇다</span></label>
+          <label><input type="radio" name="s${i}" value="5"><span>매우 그렇다</span></label>
         </div></div>`;
       });
       wrap.innerHTML = html;
     }
 
+    // 🛠️ 3단계 제출 시 자동 채점 및 게임 화면 이동
     function submitSurvey() { 
+      var totalScore = 0;
+      
+      // 15개 문항 채점 로직 (역문항은 점수를 뒤집어서 계산)
+      surveyQs.forEach((q, i) => {
+        var radios = document.getElementsByName('s' + i);
+        var selectedValue = 3; // 기본값
+        for(var r of radios) {
+          if(r.checked) { selectedValue = parseInt(r.value, 10); break; }
+        }
+        
+        // 역문항인 경우 점수 반전 (예: '매우 그렇다(5)' 선택 시 1점으로 처리)
+        if(q.reverse) {
+          selectedValue = 6 - selectedValue;
+        }
+        totalScore += selectedValue;
+      });
+      
+      // 75점 만점 기준 -> 100점 만점으로 스케일업 환산
+      var finalConvertedScore = Math.round((totalScore / 75) * 100);
+      payload.surveyScore = finalConvertedScore + "점"; // 백엔드로 보낼 꾸러미에 진짜 점수 저장!
+      sessionStorage.setItem('kas_payload', JSON.stringify(payload)); // 임시 저장
+
       goStep('game'); 
       initDragAndDrop(); 
       startGameTimer(); 
