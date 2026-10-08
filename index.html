@@ -372,9 +372,9 @@
       jobTitle: "", applicantName: "", applicantId: "",
       surveyScore: "100점", selfIntroText: "", dilemmaAnswers: "", followupAnswer: "",
       cheatCount: 0, // 🚨 화면 이탈(부정행위) 횟수 기록용
-      gameResult: "" // 🎮 상황 판단 게임 정렬 결과
+      gameResult: "", // 🎮 상황 판단 게임 정렬 결과
+      gameScore: "0점" // 🎮 [신규] 직무게임 자동 채점 점수
     };
-
     // 🚨 화면 이탈 감지 센서 (다른 탭으로 이동 시 발동)
     document.addEventListener("visibilitychange", function() {
       var activeCard = document.querySelector('.card.active');
@@ -833,10 +833,26 @@
       clearInterval(gameTimer);
       var items = document.querySelectorAll('#priority-list .priority-item');
       var orderResult = [];
+      var score = 0;
+      
+      // KAS SOP 기반 정답 순서: A(화재) -> E(FOD) -> B(정시성) -> C(타부서) -> D(행정)
+      var correctOrder = ["A", "E", "B", "C", "D"];
+
       items.forEach((item, index) => {
-        orderResult.push((index + 1) + "순위: " + item.innerText.replace('☰ ', '').trim());
+        var rawText = item.innerText.replace('☰ ', '').trim();
+        orderResult.push((index + 1) + "순위: " + rawText);
+        
+        // 정렬된 항목에서 [상황 X]의 알파벳만 추출하여 채점
+        var currentAlphabet = rawText.match(/\[상황 ([A-E])\]/)[1];
+        if(currentAlphabet === correctOrder[index]) {
+          score += 20; // 위치가 정확히 일치할 때마다 20점 부여
+        }
       });
+
       payload.gameResult = orderResult.join(' / ');
+      payload.gameScore = score + "점"; // 백엔드로 보낼 꾸러미에 게임 점수 저장
+      sessionStorage.setItem('kas_payload', JSON.stringify(payload)); // 임시 저장
+
       goStep(4);
     }
 
