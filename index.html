@@ -359,7 +359,7 @@
 
   <script>
     // ⚠️ [중요] 아래 URL에 구글 Apps Script에서 배포한 웹 앱 URL을 넣으세요!
-    var DATA_CENTER_URL = "https://script.google.com/a/macros/kas.co.kr/s/AKfycbyJlK5NAInCst8icblbREfcK289MtrHwszMyAh9Gwuq5C4LKdcLwBtZEG6UaKbQolSkPg/exec";
+    var DATA_CENTER_URL = "https://script.google.com/a/macros/kas.co.kr/s/AKfycbxcRQLw6MbZOqOXCPw6nv7WQnmd_dFq31bJ-yqh0lwCU28UYqYhuT24POqLMGRNvJvK/exec";
 
     var globalStream = null;
     var recognition = null;
@@ -502,7 +502,6 @@
         customAlert("이름은 한글 또는 영문으로만 정확히 입력해 주세요."); return;
       }
       
-      // 🛠️ 외계어로 깨졌던 \vert{}\vert{} 부분을 정상적인 || (OR 연산자)로 복구했습니다.
       if (!/^\d{4}$/.test(appId1) || !/^\d{6}$/.test(appId2)) {
         customAlert("수험번호는 앞 4자리, 뒤 6자리의 숫자로 입력해 주세요."); return;
       }
@@ -510,6 +509,9 @@
       payload.jobTitle = jobTitle;
       payload.applicantName = appName;
       payload.applicantId = appId1 + "-" + appId2;
+      
+      // ⏰ [신규] '다음 단계로' 버튼을 누른 이 순간을 면접 시작 시간으로 기록하여 백엔드로 보냅니다!
+      payload.startTime = new Date().toISOString();
 
       sessionStorage.setItem('kas_payload', JSON.stringify(payload));
 
