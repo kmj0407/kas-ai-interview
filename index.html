@@ -686,13 +686,15 @@
       labelEl.innerText = "답변 시간";
       labelEl.style.color = "#E53935";
       
+      // 🔒 [신규] 버튼을 비활성화하고 30초 카운트다운 안내를 띄웁니다.
       var btn = document.getElementById('btn-' + step);
-      btn.style.background = "#E53935";
-      btn.innerText = "답변 완료 (다음으로)";
-      btn.onclick = function() { finishRec(step); };
+      btn.disabled = true;
+      btn.style.background = "#ccc";
+      btn.innerText = "최소 30초 답변 필요 (30초 남음)";
 
       clearInterval(timer);
       var aTime = ansTime;
+      var minTimeRequired = 30; // 최소 필수 답변 시간
       
       var m = String(Math.floor(aTime/60)).padStart(2,'0');
       var s = String(aTime%60).padStart(2,'0');
@@ -701,6 +703,18 @@
 
       timer = setInterval(function() {
         aTime--;
+        var elapsed = ansTime - aTime; // 현재까지 답변한 시간
+        
+        // 🔓 [신규] 30초가 지났는지 체크하여 버튼 락을 해제합니다.
+        if (elapsed < minTimeRequired) {
+          btn.innerText = "최소 30초 답변 필요 (" + (minTimeRequired - elapsed) + "초 남음)";
+        } else if (elapsed === minTimeRequired) {
+          btn.disabled = false;
+          btn.style.background = "#E53935";
+          btn.innerText = "답변 완료 (다음으로)";
+          btn.onclick = function() { finishRec(step); };
+        }
+
         var m = String(Math.floor(aTime/60)).padStart(2,'0');
         var s = String(aTime%60).padStart(2,'0');
         timerEl.innerText = m + ":" + s;
@@ -910,9 +924,8 @@
         btn.disabled = false;
         btn.style.background = "var(--kas-accent)";
         btn.innerText = "질문 확인 및 준비 시작";
-        btn.onclick = function() { startPrep(5, 30, 60); };
+        btn.onclick = function() { startPrep(5, 30, 90); }; // 답변 시간을 90초로 연장
       }
-    }
 
     function forceSkipStep() {
       var activeCard = document.querySelector('.card.active');
@@ -954,11 +967,17 @@
       .then(r => r.json())
       .then(d => {
         document.getElementById('loading-zone').style.display = 'none';
-        document.getElementById('result-box').style.display = 'block';
+        // 백엔드에서 success 신호를 정확히 보냈을 때만 완료창 오픈
+        if(d.status === "success" || d.result) {
+          document.getElementById('result-box').style.display = 'block';
+        } else {
+          customAlert("⚠️ 백엔드 데이터 처리 중 오류가 발생했습니다.\n" + (d.error || ""));
+        }
       })
-      .catch(() => {
+      .catch((e) => {
         document.getElementById('loading-zone').style.display = 'none';
-        document.getElementById('result-box').style.display = 'block';
+        // 데이터 전송에 실패했을 때 뜨는 명확한 팝업
+        customAlert("🚨 통신 실패!\nKAS 데이터 센터(구글 시트)로 데이터가 전송되지 않았습니다.\n(웹 앱 배포 권한이 '모든 사용자'인지, DATA_CENTER_URL이 최신인지 확인해 주세요.)");
       });
     }
   </script>
