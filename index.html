@@ -926,6 +926,7 @@
         btn.innerText = "질문 확인 및 준비 시작";
         btn.onclick = function() { startPrep(5, 30, 90); }; // 답변 시간을 90초로 연장
       }
+    } // 🚨 [오류 수정] 이 중괄호가 빠져서 화면이 멈췄던 것입니다!
 
     function forceSkipStep() {
       var activeCard = document.querySelector('.card.active');
