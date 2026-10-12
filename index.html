@@ -211,10 +211,7 @@
       <h2>[지원자 정보 및 동의]</h2>
       <label>채용 공고 선택</label>
       <select id="job-title">
-        <option value="">지원하시는 공고를 선택해 주세요</option>
-        <option value="[26년 10월] 경인지역 지상조업 신입사원 모집">[26년 10월] 경인지역 지상조업 신입사원 모집</option>
-        <option value="[26년 10월] 김해공항 지상조업 신입사원 모집">[26년 10월] 김해공항 지상조업 신입사원 모집</option>
-        <option value="[26년 10월] 제주공항 지상조업 신입사원 모집">[26년 10월] 제주공항 지상조업 신입사원 모집</option>
+        <option value="">지원하시는 공고를 불러오는 중입니다...</option>
       </select>
       <label>이름</label>
       <input type="text" id="app-name" placeholder="예: 홍길동">
@@ -451,6 +448,22 @@
 
     // 🛠️ 새로고침 복구 및 스플래시 통합 로직
     window.onload = async function() {
+      // 🏢 [신규] 백엔드에서 채용공고 목록 자동 불러오기
+      fetch(DATA_CENTER_URL, { method: 'POST', body: JSON.stringify({ action: "get_jobs" }) })
+      .then(r => r.json())
+      .then(d => {
+        if(d.jobs) {
+          var select = document.getElementById('job-title');
+          select.innerHTML = '<option value="">지원하시는 공고를 선택해 주세요</option>';
+          d.jobs.forEach(job => {
+            var opt = document.createElement('option');
+            opt.value = job; opt.text = job;
+            select.appendChild(opt);
+          });
+        }
+      }).catch(e => console.log("공고 로드 지연"));
+
+      // 🛠️ 기존 스플래시 및 새로고침 복구 로직 (생략 없이 그대로 유지)
       var savedStep = sessionStorage.getItem('kas_step');
       var savedPayload = sessionStorage.getItem('kas_payload');
       
