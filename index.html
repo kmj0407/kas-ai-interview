@@ -356,7 +356,7 @@
 
   <script>
     // ⚠️ [중요] 아래 URL에 구글 Apps Script에서 배포한 웹 앱 URL을 넣으세요!
-    var DATA_CENTER_URL = "https://script.google.com/a/macros/kas.co.kr/s/AKfycbwCwa7nkD9k3lYQCuLV70epcFyGMue1JTq-8J58X-DyxfWWbrHz3QJLTf8kr5Lf9yIb/exec";
+    var DATA_CENTER_URL = "https://script.google.com/a/macros/kas.co.kr/s/AKfycbxurAZ9hGjuk65U1kM_xAkS8I_DqfrmQe0hEJB2lIW-nydOXpsVV_O24aS17fiIE9rg/exec";
 
     var globalStream = null;
     var recognition = null;
@@ -366,11 +366,14 @@
 
     var payload = {
       action: "submit",
+      startTime: "", // 면접 시작 시간
       jobTitle: "", applicantName: "", applicantId: "",
-      surveyScore: "100점", selfIntroText: "", dilemmaAnswers: "", followupAnswer: "",
-      cheatCount: 0, // 🚨 화면 이탈(부정행위) 횟수 기록용
-      gameResult: "", // 🎮 상황 판단 게임 정렬 결과
-      gameScore: "0점" // 🎮 [신규] 직무게임 자동 채점 점수
+      surveyScore: "100점", selfIntroText: "", dilemmaAnswers: "", 
+      followUpQuestion: "", // 🤖 [신규] 생성된 AI 꼬리질문 내용 저장
+      followupAnswer: "",
+      cheatCount: 0, 
+      gameResult: "", 
+      gameScore: "0점" 
     };
     // 🚨 화면 이탈 감지 센서 (다른 탭으로 이동 시 발동)
     document.addEventListener("visibilitychange", function() {
@@ -720,7 +723,7 @@
       var btn = document.getElementById('btn-' + step);
       btn.disabled = true;
       btn.style.background = "#ccc";
-      btn.innerText = "최소 30초 답변 필요 (30초 남음)";
+      btn.innerText = "최소 답변 필요 (30초 남음)";
 
       clearInterval(timer);
       var aTime = ansTime;
@@ -916,6 +919,8 @@
       document.getElementById('circle-4').style.background = "conic-gradient(#eee 100%, #eee 0)";
       
       var btn = document.getElementById('btn-4');
+      // 🛠️ [버그 수정] 강제 패스 시 이전 답변의 '잠금 상태(disabled)'를 해제하여 새 질문을 볼 수 있게 합니다.
+      btn.disabled = false; 
       btn.style.background = "var(--kas-accent)";
       btn.innerText = "질문 확인 및 준비 시작";
       btn.onclick = function() { startPrep(4, 30, 90); };
@@ -940,12 +945,14 @@
       .then(r => r.json())
       .then(d => {
         if(d.followUpQuestion) {
+          payload.followUpQuestion = d.followUpQuestion; // 📥 [신규] 생성된 질문 저장
           document.getElementById('q5-text').innerText = "🤖 [AI 꼬리질문] " + d.followUpQuestion;
           setupStep5Btn();
         }
       })
       .catch(() => {
-        document.getElementById('q5-text').innerText = "🤖 [AI 꼬리질문] 앞선 답변을 종합해볼 때, 안전 수칙 준수 시 현장 동료와의 갈등 발생 시 어떻게 해결하시겠습니까?";
+        payload.followUpQuestion = "앞선 답변을 종합해볼 때, 안전 수칙 준수 시 현장 동료와의 갈등 발생 시 어떻게 해결하시겠습니까?"; // 📥 [신규]
+        document.getElementById('q5-text').innerText = "🤖 [AI 꼬리질문] " + payload.followUpQuestion;
         setupStep5Btn();
       });
       
