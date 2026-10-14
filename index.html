@@ -355,7 +355,6 @@
   </main>
 
   <script>
-    <script>
     // ⚠️ [중요] 아래 URL에 구글 Apps Script에서 배포한 웹 앱 URL을 넣으세요!
     var DATA_CENTER_URL = "https://script.google.com/a/macros/kas.co.kr/s/AKfycbwCwa7nkD9k3lYQCuLV70epcFyGMue1JTq-8J58X-DyxfWWbrHz3QJLTf8kr5Lf9yIb/exec";
 
@@ -449,20 +448,37 @@
 
     // 🛠️ 새로고침 복구 및 스플래시 통합 로직
     window.onload = async function() {
-      // 🏢 [신규] 백엔드에서 채용공고 목록 자동 불러오기
-      fetch(DATA_CENTER_URL, { method: 'POST', body: JSON.stringify({ action: "get_jobs" }) })
+      // 🏢 [신규] 백엔드에서 채용공고 목록 자동 불러오기 (안전장치 플랜 B 탑재)
+      fetch(DATA_CENTER_URL, { 
+        method: 'POST', 
+        // 구글 Apps Script 통신 시 보안(CORS) 차단을 막기 위한 필수 헤더
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "get_jobs" }) 
+      })
       .then(r => r.json())
       .then(d => {
-        if(d.jobs) {
-          var select = document.getElementById('job-title');
-          select.innerHTML = '<option value="">지원하시는 공고를 선택해 주세요</option>';
+        var select = document.getElementById('job-title');
+        select.innerHTML = '<option value="">지원하시는 공고를 선택해 주세요</option>';
+        
+        // 백엔드에서 정상적으로 공고(jobs)를 보내주었을 때
+        if(d.jobs && d.jobs.length > 0 && d.jobs[0] !== "채용공고 시트를 찾을 수 없습니다.") {
           d.jobs.forEach(job => {
             var opt = document.createElement('option');
             opt.value = job; opt.text = job;
             select.appendChild(opt);
           });
+        } else {
+          // 백엔드는 연결되었으나 '채용공고' 시트가 없거나 비어있을 때
+          select.innerHTML += '<option value="[시스템오류] 공고 설정 필요">[시스템오류] 채용공고 시트를 확인해주세요.</option>';
+          select.innerHTML += '<option value="[임시] 지상조업 신입 모집">[임시] 지상조업 신입 모집 (테스트용)</option>';
         }
-      }).catch(e => console.log("공고 로드 지연"));
+      }).catch(e => {
+        console.log("공고 로드 실패:", e);
+        // 통신 자체가 완전히 끊겼을 때 (예: URL 오류, 미배포 등) 화면 멈춤 방지
+        var select = document.getElementById('job-title');
+        select.innerHTML = '<option value="">지원하시는 공고를 선택해 주세요</option>';
+        select.innerHTML += '<option value="[통신오류] 테스트 공고">[통신오류] 데이터센터 연결 실패 (테스트 진행 가능)</option>';
+      });
 
       // 🛠️ 기존 스플래시 및 새로고침 복구 로직 (생략 없이 그대로 유지)
       var savedStep = sessionStorage.getItem('kas_step');
