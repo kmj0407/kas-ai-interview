@@ -740,7 +740,7 @@
         
         // 🔓 [신규] 30초가 지났는지 체크하여 버튼 락을 해제합니다.
         if (elapsed < minTimeRequired) {
-          btn.innerText = "최소 30초 답변 필요 (" + (minTimeRequired - elapsed) + "초 남음)";
+          btn.innerText = "최소 답변 필요 (" + (minTimeRequired - elapsed) + "초 남음)";
         } else if (elapsed === minTimeRequired) {
           btn.disabled = false;
           btn.style.background = "#E53935";
