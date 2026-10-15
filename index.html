@@ -385,7 +385,7 @@
       if (document.hidden && activeCard && activeCard.id !== 'step-intro' && activeCard.id !== 'step-guide' && activeCard.id !== 'step-0' && activeCard.id !== 'step-6') {
         payload.cheatCount += 1;
         sessionStorage.setItem('kas_payload', JSON.stringify(payload)); 
-        customAlert("⚠️ [부정행위 경고]\n다른 창이나 탭으로 이동한 기록이 감지되었습니다.\n현재 이탈 횟수: " + payload.cheatCount + "회\n(반복될 경우 KAS 면접 평가에 불이익이 발생합니다.)");
+        customAlert("⚠️ [부정행위 경고]\n다른 창이나 탭으로 이동한 기록이 감지되었습니다.\n현재 이탈 횟수: " + payload.cheatCount + "회\n");
       }
     });
 
