@@ -330,7 +330,7 @@
         </div>
       </div>
 
-      <p id="q5-hidden-msg" style="color: #666; font-weight: bold; text-align: center;">답변을 분석하여 AI 꼬리질문을 생성 중입니다···</p>
+      <p id="q5-hidden-msg" style="color: #666; font-weight: bold; text-align: center;">답변을 분석하여 AI 꼬리질문을 생성 중입니다.</p>
       <p id="q5-text" style="font-size: 1.05rem; font-weight: bold; color: #E53935; display: none;"></p>
       <button class="btn" id="btn-5" disabled>꼬리질문 생성 대기 중...</button>
     </div>
@@ -390,7 +390,7 @@
       if (document.hidden && strictSteps.includes(activeCard.id)) {
         payload.cheatCount += 1;
         sessionStorage.setItem('kas_payload', JSON.stringify(payload)); 
-        customAlert("⚠️ [부정행위 경고]\n다른 창이나 탭으로 이동한 기록이 감지되었습니다.\n현재 이탈 횟수: " + payload.cheatCount + "회\n(반복될 경우 KAS 면접 평가에 불이익이 발생합니다.)");
+        customAlert("⚠️ [부정행위 경고]\n다른 창이나 탭으로 이동한 기록이 감지되었습니다.\n현재 이탈 횟수: " + payload.cheatCount + "회\n");
       }
     });
 
