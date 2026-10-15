@@ -379,13 +379,18 @@
       gameResult: "", 
       gameScore: "0점" 
     };
-    // 🚨 화면 이탈 감지 센서 (다른 탭으로 이동 시 발동)
+    // 🚨 화면 이탈 감지 센서 (억울한 감점 방지 고도화)
     document.addEventListener("visibilitychange", function() {
       var activeCard = document.querySelector('.card.active');
-      if (document.hidden && activeCard && activeCard.id !== 'step-intro' && activeCard.id !== 'step-guide' && activeCard.id !== 'step-0' && activeCard.id !== 'step-6') {
+      if (!activeCard) return;
+      
+      // 자기소개(2), 성향파악(3), 게임, 딜레마(4), 심층면접(5) 단계에서만 이탈 감지 작동
+      var strictSteps = ['step-2', 'step-3', 'step-game', 'step-4', 'step-5'];
+      
+      if (document.hidden && strictSteps.includes(activeCard.id)) {
         payload.cheatCount += 1;
         sessionStorage.setItem('kas_payload', JSON.stringify(payload)); 
-        customAlert("⚠️ [부정행위 경고]\n다른 창이나 탭으로 이동한 기록이 감지되었습니다.\n현재 이탈 횟수: " + payload.cheatCount + "회\n");
+        customAlert("⚠️ [부정행위 경고]\n다른 창이나 탭으로 이동한 기록이 감지되었습니다.\n현재 이탈 횟수: " + payload.cheatCount + "회\n(반복될 경우 KAS 면접 평가에 불이익이 발생합니다.)");
       }
     });
 
@@ -619,7 +624,9 @@
           sttBox.innerText = "🎙️ " + text;
         }
 
-        if(stepNum === 1 && (text.includes("한국공항") || text.includes("안전"))) {
+        // 1단계 환경점검: 제시된 문장을 끝까지 완벽하게 다 말해야만 통과되도록 엄격 검사
+        var cleanText = text.replace(/\s+/g, ''); // 띄어쓰기를 모두 제거하고 텍스트만 추출
+        if(stepNum === 1 && cleanText.includes("한국공항지상조업안전수칙을준수하겠습니다")) {
           passStep1();
         }
         if(stepNum === 2) payload.selfIntroText = text;
@@ -927,14 +934,92 @@
         setupStep5Btn();
       });
       
-      function setupStep5Btn() {
-        document.getElementById('q5-hidden-msg').innerText = "앞선 답변을 분석하여 AI 꼬리질문을 생성했습니다. 버튼을 눌러 확인하세요.";
-        btn.disabled = false;
-        btn.style.background = "var(--kas-accent)";
-        btn.innerText = "질문 확인 및 준비 시작";
-        btn.onclick = function() { startPrep(5, 30, 90); }; // 답변 시간을 90초로 연장
-      }
-    } // 🚨 [오류 수정] 이 중괄호가 빠져서 화면이 멈췄던 것입니다!
+      // 🛡️ [사내망 돌파 터널] KAS 방화벽을 피해 데이터를 쏘는 공통 함수
+    function sendViaIframe(payloadData) {
+      var oldIframe = document.getElementById('kas-hidden-iframe');
+      if(oldIframe) oldIframe.remove();
+
+      var iframe = document.createElement('iframe');
+      iframe.name = 'kas-hidden-iframe';
+      iframe.id = 'kas-hidden-iframe';
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+
+      var form = document.createElement('form');
+      form.method = 'POST';
+      form.action = DATA_CENTER_URL;
+      form.target = 'kas-hidden-iframe'; 
+      form.style.display = 'none';
+
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'payload';
+      input.value = JSON.stringify(payloadData);
+      
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    // 🎯 백엔드(구글 시트)에서 일 처리를 끝내고 보내는 '진짜 무전'을 듣는 곳!
+    window.addEventListener('message', function(event) {
+      if (!event.data) return;
+      try {
+        var msg = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        
+        // 🤖 1. 백엔드에서 AI 꼬리질문이 무사히 도착했을 때
+        if (msg.type === 'kas_followup') {
+          var btn = document.getElementById('btn-5');
+          payload.followUpQuestion = msg.question;
+          document.getElementById('q5-text').innerText = "🤖 [AI 꼬리질문] " + msg.question;
+          document.getElementById('q5-hidden-msg').innerText = "앞선 답변을 분석하여 맞춤 꼬리질문을 생성했습니다. 버튼을 눌러 확인하세요.";
+          btn.disabled = false;
+          btn.style.background = "var(--kas-accent)";
+          btn.innerText = "질문 확인 및 준비 시작";
+          btn.onclick = function() { startPrep(5, 30, 90); };
+        }
+        
+        // ✅ 2. 엑셀에 데이터 저장이 완벽하게 끝났다는 진짜 성공 무전이 도착했을 때!
+        if (msg.type === 'kas_success') {
+          document.getElementById('loading-zone').style.display = 'none';
+          document.getElementById('result-box').style.display = 'block'; // 이때만 전송 완료 창이 뜹니다!
+        }
+
+        // 🚨 3. 백엔드 에러 무전이 도착했을 때
+        if (msg.type === 'kas_error') {
+          document.getElementById('loading-zone').style.display = 'none';
+          customAlert("⚠️ 백엔드 오류!\n" + msg.error);
+        }
+      } catch(e) {}
+    });
+
+    function fetchFollowUpQuestion() {
+      var btn = document.getElementById('btn-5');
+      btn.disabled = true;
+      btn.style.background = "#999";
+      btn.innerText = "🤖 꼬리질문 생성 중···";
+      document.getElementById('q5-text').style.display = 'none';
+      document.getElementById('q5-hidden-msg').style.display = 'block';
+
+      // 🚨 기존 fetch 코드를 지우고, 방화벽을 뚫는 특수 터널로 꼬리질문 요청을 보냅니다!
+      sendViaIframe({
+        action: "generate_followup",
+        dilemmaAnswers: payload.dilemmaAnswers
+      });
+
+      // 15초 타임아웃 (혹시라도 꼬리질문 생성이 너무 오래 걸릴 때를 대비한 기본 질문)
+      setTimeout(function() {
+        if(!payload.followUpQuestion) {
+          payload.followUpQuestion = "현장 안전 수칙 준수 시 동료와의 마찰이 발생한다면 어떻게 대처하시겠습니까?"; 
+          document.getElementById('q5-text').innerText = "🤖 [AI 꼬리질문] " + payload.followUpQuestion;
+          document.getElementById('q5-hidden-msg').innerText = "보안망 지연으로 예비 질문이 배정되었습니다. 버튼을 눌러 확인하세요.";
+          btn.disabled = false;
+          btn.style.background = "var(--kas-accent)";
+          btn.innerText = "질문 확인 및 준비 시작";
+          btn.onclick = function() { startPrep(5, 30, 90); };
+        }
+      }, 15000);
+    }
 
     function forceSkipStep() {
       var activeCard = document.querySelector('.card.active');
@@ -972,60 +1057,17 @@
       document.getElementById('loading-zone').style.display = 'block';
       document.getElementById('result-box').style.display = 'none';
 
-      try {
-        // 🛡️ [궁극의 사내망 돌파] KAS 방화벽을 통과하기 위해 보이지 않는 폼(Form)과 터널(Iframe)을 생성합니다.
-        var oldIframe = document.getElementById('kas-hidden-iframe');
-        if(oldIframe) oldIframe.remove();
+      // 🚨 최종 제출 데이터도 특수 터널로 쏩니다!
+      sendViaIframe(payload);
 
-        var iframe = document.createElement('iframe');
-        iframe.name = 'kas-hidden-iframe';
-        iframe.id = 'kas-hidden-iframe';
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-
-        // 🎯 백엔드에서 엑셀 작성을 마치고 보내는 '진짜 성공' 무전을 기다립니다!
-        var messageListener = function(event) {
-          if (event.data === 'kas_success') {
-            clearTimeout(fallbackTimer);
-            document.getElementById('loading-zone').style.display = 'none';
-            document.getElementById('result-box').style.display = 'block'; // 찐 성공 화면!
-            window.removeEventListener('message', messageListener);
-          } else if (typeof event.data === 'string' && event.data.startsWith('kas_error')) {
-            clearTimeout(fallbackTimer);
-            document.getElementById('loading-zone').style.display = 'none';
-            customAlert("⚠️ 백엔드 데이터 저장 실패!\n원인: " + event.data);
-            window.removeEventListener('message', messageListener);
-          }
-        };
-        window.addEventListener('message', messageListener);
-
-        // 무한 로딩 방지 (20초 동안 엑셀 저장이 안 되면 차단된 것으로 간주)
-        var fallbackTimer = setTimeout(function() {
+      // 20초가 지나도 백엔드에서 'kas_success' 무전이 안 오면 실패 알림
+      setTimeout(function() {
+        var resultBox = document.getElementById('result-box');
+        if (resultBox.style.display !== 'block') {
           document.getElementById('loading-zone').style.display = 'none';
-          customAlert("🚨 통신 실패! 데이터가 전송되지 않았습니다.\nKAS 사내 방화벽 차단 또는 계정 로그인 문제일 수 있습니다.");
-          window.removeEventListener('message', messageListener);
-        }, 20000);
-
-        // 데이터 포장 및 발사
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = DATA_CENTER_URL;
-        form.target = 'kas-hidden-iframe'; // 화면이 넘어가지 않게 숨겨진 터널로 쏩니다.
-        form.style.display = 'none';
-
-        var input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'payload';
-        input.value = JSON.stringify(payload);
-        
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-
-      } catch (e) {
-        document.getElementById('loading-zone').style.display = 'none';
-        customAlert("🚨 폼 생성 중 시스템 오류가 발생했습니다.");
-      }
+          customAlert("🚨 서버 응답 지연! 사내 방화벽에 막혔거나 데이터 전송이 완료되지 않았습니다.");
+        }
+      }, 20000);
     }
   </script>
   <!-- 🛠️ [개발 테스트용] 전역 강제 패스 마스터 버튼 (최종 전사 배포 전 삭제 요망) -->
