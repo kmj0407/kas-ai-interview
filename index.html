@@ -934,7 +934,7 @@
         if (msg.type === 'kas_followup') {
           var btn = document.getElementById('btn-5');
           payload.followUpQuestion = msg.question;
-          document.getElementById('q5-text').innerText = "🤖 [AI 꼬리질문] " + msg.question;
+          document.getElementById('q5-text').innerText = "[AI 꼬리질문] " + msg.question;
           document.getElementById('q5-hidden-msg').innerText = "앞선 답변을 분석하여 맞춤 꼬리질문을 생성했습니다. 버튼을 눌러 확인하세요.";
           btn.disabled = false;
           btn.style.background = "var(--kas-accent)";
