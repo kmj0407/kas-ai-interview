@@ -870,8 +870,10 @@
         
         // 정렬된 항목에서 [상황 X]의 알파벳만 추출하여 채점
         var currentAlphabet = rawText.match(/\[상황 ([A-E])\]/)[1];
-        if(currentAlphabet === correctOrder[index]) {
-          score += 20; // 위치가 정확히 일치할 때마다 20점 부여
+        
+        // 🎯 [인턴님 기획 반영] 정확히 자기가 있어야 할 순서(index)에 놓였을 때만 20점 부여!
+        if (currentAlphabet === correctOrder[index]) {
+          score += 20; 
         }
       });
 
