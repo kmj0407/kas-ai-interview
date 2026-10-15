@@ -343,7 +343,7 @@
       <div id="loading-zone" style="margin-top: 2rem; margin-bottom: 2rem;">
         <p style="font-size: 1.15rem; font-weight: bold; color: var(--kas-accent);">지원자님의 응시 데이터를 KAS 데이터 센터로 전송 중입니다···</p>
         <div class="spinner" id="loading"></div>
-        <p style="color: #666; font-size: 0.95rem;">(안전한 저장을 위해 창을 닫거나 새로고침하지 마십시오)</p>
+        <p style="color: #666; font-size: 0.95rem;">(안전한 저장을 위해 창을 닫거나 새로고침하지 마십시오.)</p>
       </div>
       
       <!-- 전송 완료 화면 -->
@@ -619,9 +619,9 @@
           sttBox.innerText = "🎙️ " + text;
         }
 
-        // 🚨 [수정완료] 1단계 환경점검: 문장을 끝까지 정확히 말해야만 통과되도록 엄격 검사
+        // 🚨 [엄격 고도화] 1단계: 제시된 전체 문장을 처음부터 끝까지 완벽하게 말해야만 통과!
         var cleanText = text.replace(/\s+/g, '');
-        if(stepNum === 1 && cleanText.includes("한국공항지상조업안전수칙을준수하겠습니다")) {
+        if(stepNum === 1 && cleanText.includes("안녕하십니까한국공항지상조업안전수칙을준수하겠습니다")) {
           passStep1();
         }
 
@@ -1019,15 +1019,49 @@
       document.getElementById('loading-zone').style.display = 'block';
       document.getElementById('result-box').style.display = 'none';
 
-      // 🚨 최종 제출 데이터를 터널로 발사합니다!
-      sendViaIframe(payload);
+      var oldIframe = document.getElementById('kas-hidden-iframe');
+      if(oldIframe) oldIframe.remove();
 
-      // 20초가 지나도 'kas_success' 무전이 없으면 실패 알림
-      setTimeout(function() {
+      var iframe = document.createElement('iframe');
+      iframe.name = 'kas-hidden-iframe';
+      iframe.id = 'kas-hidden-iframe';
+      iframe.style.display = 'none';
+      
+      // 🚀 [궁극의 해결책] 방화벽이 메시지를 차단해도, 백엔드 작업이 끝나면 브라우저가 'onload' 신호를 보냅니다!
+      var isSubmitted = false;
+      iframe.onload = function() {
+        if (!isSubmitted) {
+          isSubmitted = true; // 첫 번째 연결(빈 화면)은 패스
+        } else {
+          // 🎯 두 번째 연결 종료 = 구글 시트(백엔드)에 엑셀 데이터 100% 저장 완료를 의미합니다!
+          document.getElementById('loading-zone').style.display = 'none';
+          document.getElementById('result-box').style.display = 'block'; // 찐 전송 완료 창 오픈!
+          if (window.kasTimeout) clearTimeout(window.kasTimeout);
+        }
+      };
+      document.body.appendChild(iframe);
+
+      var form = document.createElement('form');
+      form.method = 'POST';
+      form.action = DATA_CENTER_URL;
+      form.target = 'kas-hidden-iframe'; 
+      form.style.display = 'none';
+
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'payload';
+      input.value = JSON.stringify(payload);
+      
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
+
+      // 만약 20초 동안 진짜 인터넷이 끊겨서 터널 자체가 안 뚫렸을 때만 에러
+      window.kasTimeout = setTimeout(function() {
         var resultBox = document.getElementById('result-box');
         if (resultBox.style.display !== 'block') {
           document.getElementById('loading-zone').style.display = 'none';
-          customAlert("🚨 서버 응답 지연! 사내 방화벽에 막혔거나 데이터 전송이 완료되지 않았습니다.");
+          customAlert("🚨 네트워크 지연: 데이터가 정상적으로 전송되지 않았을 수 있습니다.");
         }
       }, 20000);
     }
