@@ -758,10 +758,11 @@
       var wrap = document.getElementById('survey-wrap');
       var html = "";
       surveyQs.forEach((q, i) => {
+        // 🚀 [수정] '보통이다'에 있던 기본 checked 속성을 제거하여 무조건 직접 선택하게 만듭니다.
         html += `<div class="survey-q"><p><strong>${q.text}</strong></p><div class="options">
           <label><input type="radio" name="s${i}" value="1"><span>전혀 아니다</span></label>
           <label><input type="radio" name="s${i}" value="2"><span>아니다</span></label>
-          <label><input type="radio" name="s${i}" value="3" checked><span>보통이다</span></label>
+          <label><input type="radio" name="s${i}" value="3"><span>보통이다</span></label>
           <label><input type="radio" name="s${i}" value="4"><span>그렇다</span></label>
           <label><input type="radio" name="s${i}" value="5"><span>매우 그렇다</span></label>
         </div></div>`;
@@ -771,17 +772,37 @@
 
     function submitSurvey() { 
       var totalScore = 0;
+      var isAllAnswered = true;
+      var neutralCount = 0; // 🚀 [추가] '보통이다(3점)'만 찍었는지 감시하는 센서
+
       surveyQs.forEach((q, i) => {
         var radios = document.getElementsByName('s' + i);
-        var selectedValue = 3; 
+        var selectedValue = 0; 
         for(var r of radios) {
           if(r.checked) { selectedValue = parseInt(r.value, 10); break; }
         }
-        if(q.reverse) {
-          selectedValue = 6 - selectedValue;
+
+        if(selectedValue === 0) {
+          isAllAnswered = false; 
+        } else {
+          if(selectedValue === 3) {
+            neutralCount++; // 🚀 보통이다(3점)를 고르면 카운트 1 증가
+          }
+
+          if(q.reverse) {
+            selectedValue = 6 - selectedValue;
+          }
+          totalScore += selectedValue;
         }
-        totalScore += selectedValue;
       });
+
+      if(!isAllAnswered) {
+        customAlert("⚠️ KAS 지상조업 성향 파악을 위해 15개 모든 문항에 응답해 주십시오.");
+        return;
+      }
+
+      // 🚀 [추가] 15문항 전부 '보통이다'를 골랐다면 신뢰도 불량 플래그를 데이터에 달아줍니다.
+      payload.surveyWarning = (neutralCount === surveyQs.length);
       
       var finalConvertedScore = Math.round((totalScore / 75) * 100);
       payload.surveyScore = finalConvertedScore + "점"; 
