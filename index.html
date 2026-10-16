@@ -521,6 +521,9 @@
 
       sessionStorage.setItem('kas_payload', JSON.stringify(payload));
 
+      // 🚀 [추가] 로그인 성공 직후, 엑셀에 최초 접속(진입) 상태를 기록합니다!
+      saveStepRecord("1. 정보 입력 완료, 환경 점검 진입");
+
       try {
         globalStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         goStep(1);
@@ -811,8 +814,10 @@
       goStep('game'); 
       initDragAndDrop(); 
       startGameTimer(); 
+      
+      // 🚀 [추가] 성향 검사 제출 완료 후, 직무 게임 진입 상태를 백엔드에 몰래 전송합니다!
+      saveStepRecord("2. 직무 성향 파악 완료, 게임 진입");
     }
-
     var gameTimer;
     function startGameTimer() {
       clearInterval(gameTimer);
@@ -1092,6 +1097,16 @@
           customAlert("🚨 네트워크 지연: 데이터가 정상적으로 전송되지 않았을 수 있습니다.");
         }
       }, 20000);
+    }
+
+    // 🚀 [추가] 백엔드로 현재 페이지 진행 상태를 쏘는 KAS 이탈 추적 레이더 함수
+    function saveStepRecord(stepName) {
+      var currentPayload = JSON.parse(sessionStorage.getItem('kas_payload') || "{}");
+      if(!currentPayload.applicantId) return; // 아직 로그인 전이면 패스
+      
+      currentPayload.currentStep = stepName;
+      // 화면 멈춤 없이 구글 백엔드 함수(saveIntermediateStep)를 몰래 호출합니다.
+      google.script.run.saveIntermediateStep(JSON.stringify(currentPayload));
     }
   </script>
   <!-- 🛠️ [개발 테스트용] 전역 강제 패스 마스터 버튼 (최종 전사 배포 전 삭제 요망) -->
