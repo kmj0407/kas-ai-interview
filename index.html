@@ -535,6 +535,14 @@
     function goStep(step) {
       sessionStorage.setItem('kas_step', step.toString());
       if (step !== 'guide' && step !== 'intro' && step !== 'game') step = parseInt(step, 10);
+
+      // 🚀 [자동화 칩 부착] 페이지가 바뀔 때마다 백엔드에 위치를 자동 보고합니다!
+      var stepNames = {
+        'intro': "대문", 'guide': "안내/정보", 0: "지원자 정보 입력",
+        1: "환경 점검", 2: "자기소개", 3: "성향파악",
+        'game': "직무게임", 4: "현장 딜레마", 5: "심층면접", 6: "제출 대기"
+      };
+      saveStepRecord(stepNames[step] || step + "단계 진입");
       
       var progBar = document.getElementById('progress-bar');
       if (step === 'intro') {
@@ -1099,67 +1107,61 @@
       }, 20000);
     }
 
-    // 🚀 [수정완료] 깃허브 외부망에서도 백엔드로 현재 위치를 조용히 쏘는 추적 레이더 함수
+    // =================================================================
+    // 🚀 [궁극의 해결책] 방화벽(CORS)을 100% 뚫어버리는 1회용 암행 터널 레이더
+    // =================================================================
     function saveStepRecord(stepName) {
       var currentPayload = JSON.parse(sessionStorage.getItem('kas_payload') || "{}");
-      if(!currentPayload.applicantId) return; // 로그인 전이면 패스
+      if(!currentPayload.applicantId) return; // 아직 로그인 전이면 패스
       
       currentPayload.currentStep = stepName;
-      currentPayload.action = "track_step"; // 🚨 백엔드(doPost)가 이탈 기록임을 알아채도록 암호 추가
+      currentPayload.action = "track_step"; // 🚨 백엔드 전용 암호
 
-      // 구글 내부망 명령어가 아닌, 표준 fetch API를 이용해 에러 없이 백엔드로 전송합니다.
-      fetch(DATA_CENTER_URL, {
-        method: 'POST',
-        body: JSON.stringify(currentPayload),
-        mode: 'no-cors' // 깃허브-구글 간 CORS(보안) 에러를 우회하여 조용히 쏘기만 함
-      }).catch(e => console.log("추적 전송 중(무시 가능)"));
+      // 방화벽 우회를 위한 1회용 투명 터널(iframe) 생성
+      var trackIframeId = 'track-iframe-' + Date.now();
+      var iframe = document.createElement('iframe');
+      iframe.name = trackIframeId;
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+
+      var form = document.createElement('form');
+      form.method = 'POST';
+      form.action = DATA_CENTER_URL;
+      form.target = trackIframeId;
+      form.style.display = 'none';
+
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'payload';
+      input.value = JSON.stringify(currentPayload);
+
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
+
+      // 전송 성공 후 3초 뒤에 터널 흔적을 깔끔하게 삭제합니다.
+      setTimeout(function() {
+        if(iframe) iframe.remove();
+        if(form) form.remove();
+      }, 3000);
     }
-    // ... (기존 프론트엔드 함수들 중략) ...
 
-      // =================================================================
-      // 🚀 [프론트엔드 신규 추가] KAS 이탈 감지 및 중간 저장 센서
-      // =================================================================
-      
-      // 현재 지원자의 정보를 담아두는 변수 (아이디, 이름 등은 실제 입력값에 맞게 연동 필요)
-      var currentApplicantInfo = {
-        id: "KAS-001",           // 테스트용 임시 아이디 (실제로는 input에서 가져오세요)
-        name: "홍길동",            // 테스트용 임시 이름
-        currentStep: "대기방 진입", // 초기 단계
-        isDropOut: false
-      };
-
-      // 1. [수동 저장] 다음 단계 버튼을 누를 때 호출할 함수 (각 페이지 '다음' 버튼 클릭 시 호출하세요)
-      function updateStepAndSave(stepName) {
-        currentApplicantInfo.currentStep = stepName;
-        currentApplicantInfo.isDropOut = false;
-        // 백엔드의 saveProgress 함수 호출
-        google.script.run.withSuccessHandler(function(res){
-          console.log("자동 저장 완료: " + res);
-        }).saveProgress(currentApplicantInfo);
+    // 🚀 [자동 이탈 감지 센서] 다른 탭이나 창으로 도망치면 즉시 레이더 발사!
+    document.addEventListener("visibilitychange", function() {
+      if (document.visibilityState === 'hidden') {
+        var savedStep = sessionStorage.getItem('kas_step');
+        var stepNames = {
+          'intro': "대문", 'guide': "안내/정보", 0: "지원자 정보 입력",
+          1: "환경 점검", 2: "자기소개", 3: "성향파악",
+          'game': "직무게임", 4: "현장 딜레마", 5: "심층면접", 6: "제출 대기"
+        };
+        var currentStepName = stepNames[savedStep] || "진행 중";
+        
+        // 화면이 숨겨지면 이탈 지점을 명시하여 터널로 전송합니다.
+        saveStepRecord(currentStepName + " (이탈 지점)");
       }
+    });
 
-      // 2. [자동 감지] 지원자가 화면 밖으로 나가는 것(다른 탭, 브라우저 최소화 등)을 감지하는 센서
-      document.addEventListener("visibilitychange", function() {
-        if (document.visibilityState === 'hidden') {
-          // 화면이 숨겨지는 순간 = 중도 이탈!
-          currentApplicantInfo.isDropOut = true;
-          currentApplicantInfo.currentStep += " (이탈 지점)"; 
-          
-          // 백엔드 함수 긴급 호출 (비동기로 강제 전송)
-          google.script.run.saveProgress(currentApplicantInfo);
-          
-          // KAS 지상조업 현장처럼 엄격한 경고 알림 (옵션)
-          // alert("⚠️ [경고] KAS AI 역량검사 중 화면을 이탈하셨습니다. 해당 기록이 서버에 전송됩니다.");
-        } else {
-          // 다시 화면으로 돌아왔을 때
-          currentApplicantInfo.isDropOut = false;
-          google.script.run.saveProgress(currentApplicantInfo);
-        }
-      });
-
-    </script>
-  </body>
-</html>
   </script>
   <!-- 🛠️ [개발 테스트용] 전역 강제 패스 마스터 버튼 (최종 전사 배포 전 삭제 요망) -->
   <button id="dev-pass-btn" style="position: fixed; bottom: 20px; right: 20px; background: #FF9800; color: white; border: none; padding: 12px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; z-index: 10000; box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onclick="forceSkipStep()">
