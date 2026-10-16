@@ -1099,14 +1099,20 @@
       }, 20000);
     }
 
-    // 🚀 [추가] 백엔드로 현재 페이지 진행 상태를 쏘는 KAS 이탈 추적 레이더 함수
+    // 🚀 [수정완료] 깃허브 외부망에서도 백엔드로 현재 위치를 조용히 쏘는 추적 레이더 함수
     function saveStepRecord(stepName) {
       var currentPayload = JSON.parse(sessionStorage.getItem('kas_payload') || "{}");
-      if(!currentPayload.applicantId) return; // 아직 로그인 전이면 패스
+      if(!currentPayload.applicantId) return; // 로그인 전이면 패스
       
       currentPayload.currentStep = stepName;
-      // 화면 멈춤 없이 구글 백엔드 함수(saveIntermediateStep)를 몰래 호출합니다.
-      google.script.run.saveIntermediateStep(JSON.stringify(currentPayload));
+      currentPayload.action = "track_step"; // 🚨 백엔드(doPost)가 이탈 기록임을 알아채도록 암호 추가
+
+      // 구글 내부망 명령어가 아닌, 표준 fetch API를 이용해 에러 없이 백엔드로 전송합니다.
+      fetch(DATA_CENTER_URL, {
+        method: 'POST',
+        body: JSON.stringify(currentPayload),
+        mode: 'no-cors' // 깃허브-구글 간 CORS(보안) 에러를 우회하여 조용히 쏘기만 함
+      }).catch(e => console.log("추적 전송 중(무시 가능)"));
     }
   </script>
   <!-- 🛠️ [개발 테스트용] 전역 강제 패스 마스터 버튼 (최종 전사 배포 전 삭제 요망) -->
